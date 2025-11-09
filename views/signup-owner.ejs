@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Owner Sign Up</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f5f5f5;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                padding: 20px;
+            }
+
+            .signup-container {
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                padding: 40px;
+                max-width: 450px;
+                width: 100%;
+                border: 3px solid #3b82f6;
+            }
+
+            .icon {
+                text-align: center;
+                font-size: 48px;
+                margin-bottom: 20px;
+            }
+
+            h1 {
+                text-align: center;
+                font-size: 24px;
+                font-weight: 600;
+                margin-bottom: 8px;
+                color: #1f2937;
+            }
+
+            .subtitle {
+                text-align: center;
+                color: #6b7280;
+                font-size: 14px;
+                margin-bottom: 30px;
+            }
+
+            .form-group {
+                margin-bottom: 20px;
+            }
+
+            label {
+                display: block;
+                font-size: 14px;
+                font-weight: 600;
+                color: #374151;
+                margin-bottom: 8px;
+            }
+
+            .required {
+                color: #ef4444;
+            }
+
+            input[type='text'],
+            input[type='email'],
+            input[type='password'],
+            input[type='tel'] {
+                width: 100%;
+                padding: 12px;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
+                font-size: 14px;
+                transition: all 0.3s;
+                background-color: #f9fafb;
+            }
+
+            input:focus {
+                outline: none;
+                border-color: #3b82f6;
+                background-color: white;
+            }
+
+            .name-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+            }
+
+            .submit-btn {
+                width: 100%;
+                padding: 14px;
+                background-color: #1e293b;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s;
+                margin-top: 10px;
+            }
+
+            .submit-btn:hover {
+                background-color: #0f172a;
+                transform: translateY(-1px);
+            }
+
+            .login-link {
+                text-align: center;
+                margin-top: 20px;
+                font-size: 14px;
+                color: #6b7280;
+            }
+
+            .login-link a {
+                color: #3b82f6;
+                text-decoration: none;
+                font-weight: 600;
+            }
+
+            .login-link a:hover {
+                text-decoration: underline;
+            }
+
+            .error {
+                background-color: #fef2f2;
+                color: #dc2626;
+                padding: 12px;
+                border-radius: 6px;
+                margin-bottom: 20px;
+                font-size: 14px;
+                border-left: 4px solid #dc2626;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="signup-container">
+            <div class="icon">📋</div>
+            <h1>SIGN UP INFORMATION</h1>
+            <p class="subtitle">TELL US ABOUT YOUR RESTAURANT</p>
+
+            <% if (typeof error !== 'undefined') { %>
+            <div class="error"><%= error %></div>
+            <% } %>
+
+            <form action="/signup/owner" method="POST">
+                <div class="name-row">
+                    <div class="form-group">
+                        <label>FIRST NAME<span class="required">*</span></label>
+                        <input type="text" name="firstName" placeholder="FIRST NAME" required />
+                    </div>
+                    <div class="form-group">
+                        <label>LAST NAME<span class="required">*</span></label>
+                        <input type="text" name="lastName" placeholder="LAST NAME" required />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>EMAIL ADDRESS<span class="required">*</span></label>
+                    <input type="email" name="email" placeholder="ENTER YOUR EMAIL" required />
+                </div>
+
+                <div class="form-group">
+                    <label>RESTAURANT NAME<span class="required">*</span></label>
+                    <input type="text" name="restaurantName" placeholder="ENTER YOUR RESTAURANT NAME" required />
+                </div>
+
+                <div class="form-group">
+                    <label>PHONE NUMBER<span class="required">*</span></label>
+                    <input type="tel" name="phoneNumber" placeholder="ENTER PHONE NUMBER" required />
+                </div>
+
+                <div class="form-group">
+                    <label>PASSWORD<span class="required">*</span></label>
+                    <input type="password" name="password" placeholder="PHONE NUMBER" required minlength="8" />
+                </div>
+
+                <div class="form-group">
+                    <label>CONFIRM PASSWORD<span class="required">*</span></label>
+                    <input type="password" name="confirmPassword" placeholder="PHONE NUMBER" required />
+                </div>
+
+                <button type="submit" class="submit-btn">FINISH SIGN UP →</button>
+            </form>
+
+            <div class="login-link">Already have an account? <a href="/login">Login</a></div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Sign Up</title>
+        <link rel="stylesheet" href="/main.css" />
+    </head>
+    <body class="grey-bg">
+        <div class="login-container">
+            <h1>StockUp</h1>
+            <div class="subtitle">Create your account</div>
+
+            <form action="/signup" method="POST">
+                <label for="username">USERNAME</label>
+                <input type="text" id="username" name="username" placeholder="Choose a username" required />
+
+                <label for="password">PASSWORD</label>
+                <input type="password" id="password" name="password" placeholder="Create a password" required />
+
+                <label for="confirm-password">CONFIRM PASSWORD</label>
+                <input
+                    type="password"
+                    id="confirm-password"
+                    name="confirmPassword"
+                    placeholder="Confirm your password"
+                    required
+                />
+
+                <button type="submit">Sign Up</button>
+
+                <div class="checkbox">
+                    <input type="checkbox" id="agree" required />
+                    <label for="agree">I agree to the Terms & Conditions</label>
+                </div>
+
+                <div class="signup">
+                    Already have an account?<br />
+                    <a href="/login">Log in</a>
+                </div>
+            </form>
+            <script>
+                const form = document.querySelector('form');
+                const password = document.getElementById('password');
+                const confirmPassword = document.getElementById('confirm-password');
+
+                // 입력할 때 실시간 체크
+                confirmPassword.addEventListener('input', () => {
+                    if (password.value !== confirmPassword.value) {
+                        confirmPassword.setCustomValidity('Passwords do not match');
+                    } else {
+                        confirmPassword.setCustomValidity(''); // 유효
+                    }
+                });
+
+                // 폼 제출 시 추가 체크 (안전하게)
+                form.addEventListener('submit', (e) => {
+                    if (password.value !== confirmPassword.value) {
+                        e.preventDefault(); // 제출 막기
+                        alert('Passwords do not match!');
+                    }
+                });
+            </script>
+        </div>
+    </body>
+</html>

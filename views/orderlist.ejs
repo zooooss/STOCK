@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>주문 목록 - StockUp</title>
+        <link href="/main.css" rel="stylesheet" />
+        <style>
+            /* 전체 컨테이너 스타일  */
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+                padding-bottom: 80px; /* 하단 네비게이션 공간 확보 */
+            }
+
+            /* 페이지 제목 스타일 */
+            .page-header {
+                text-align: center;
+                font-size: 20px;
+                font-weight: bold;
+                margin-bottom: 20px;
+                color: #333;
+            }
+
+            /* 업체 등록 버튼 스타일 */
+            .add-supplier-btn {
+                width: 100%;
+                padding: 10px;
+                background: lightgrey;
+                color: #333;
+                border: none;
+                border-radius: 5px;
+                font-size: 16px;
+                cursor: pointer;
+                margin-bottom: 20px;
+            }
+
+            .add-supplier-btn:hover {
+                background: #d0d0d0;
+            }
+
+            /* 팝업 오버레이 - 전체 화면을 어둡게 만드는 배경 */
+            .popup-overlay {
+                display: none; /* 기본적으로 숨김 */
+                position: fixed; /* 화면에 고정 */
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5); /* 반투명 검은색 */
+                z-index: 1000; /* 다른 요소 위에 표시 */
+            }
+
+            /* 팝업이 활성화되었을 때 */
+            .popup-overlay.active {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            /* 팝업 내용 박스 */
+            .popup-content {
+                background-color: white;
+                padding: 25px;
+                border-radius: 8px;
+                width: 90%;
+                max-width: 500px;
+                box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+                max-height: 90vh; /* 최대 높이 설정 */
+                overflow-y: auto; /* 내용이 많으면 스크롤 */
+            }
+
+            /* 팝업 제목 */
+            .popup-header {
+                font-size: 18px;
+                font-weight: bold;
+                margin-bottom: 15px;
+                text-align: center;
+                color: #333;
+            }
+
+            /* 팝업 폼 스타일 */
+            .popup-form {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            /* 폼 그룹 - 라벨과 입력 필드를 묶음 */
+            .form-group {
+                display: flex;
+                flex-direction: column;
+                margin-bottom: 10px;
+            }
+
+            /* 폼 라벨 */
+            .form-group label {
+                font-size: 14px;
+                font-weight: 600;
+                margin-bottom: 5px;
+                color: #222;
+            }
+
+            /* 입력 필드와 선택 박스 */
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                padding: 10px;
+                border: 1px solid black;
+                border-radius: 5px;
+                font-size: 16px;
+                box-sizing: border-box;
+            }
+
+            /* 텍스트 영역 */
+            .form-group textarea {
+                resize: vertical; /* 세로로만 크기 조절 가능 */
+                min-height: 80px;
+            }
+
+            /* 팝업 버튼 컨테이너 */
+            .popup-buttons {
+                display: flex;
+                gap: 10px;
+                margin-top: 15px;
+            }
+
+            /* 팝업 버튼 공통 스타일 */
+            .popup-btn {
+                flex: 1; /* 동일한 너비 */
+                padding: 10px;
+                border: none;
+                border-radius: 5px;
+                font-size: 16px;
+                cursor: pointer;
+            }
+
+            /* 제출 버튼 */
+            .popup-btn-submit {
+                background: lightgrey;
+                color: #333;
+            }
+
+            .popup-btn-submit:hover {
+                background: #d0d0d0;
+            }
+
+            /* 취소 버튼 */
+            .popup-btn-cancel {
+                background: #eee;
+                color: #333;
+            }
+
+            .popup-btn-cancel:hover {
+                background: #ddd;
+            }
+
+            /* 업체 목록 컨테이너 */
+            .supplier-list {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            /* 업체 카드 스타일 */
+            .supplier-card {
+                background-color: white;
+                border-radius: 5px;
+                padding: 15px;
+                margin-bottom: 10px;
+                box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.05);
+            }
+
+            /* 업체 카드 헤더 - 업체명과 버튼들 */
+            .supplier-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 10px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #eee;
+            }
+
+            /* 업체명 */
+            .supplier-name {
+                font-size: 16px;
+                font-weight: bold;
+                color: #333;
+            }
+
+            /* 버튼들을 담는 컨테이너 */
+            .supplier-actions {
+                display: flex;
+                gap: 5px;
+            }
+
+            /* 액션 버튼 공통 스타일 */
+            .action-btn {
+                padding: 5px 10px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 13px;
+                background: lightgrey;
+                color: #333;
+            }
+
+            .action-btn:hover {
+                background: #d0d0d0;
+            }
+
+            /* 정보 버튼 */
+            .info-btn {
+                background: #eee;
+            }
+
+            .info-btn:hover {
+                background: #ddd;
+            }
+
+            /* 수정 버튼 */
+            .edit-btn {
+                background: lightgrey;
+            }
+
+            .edit-btn:hover {
+                background: #d0d0d0;
+            }
+
+            /* 삭제 버튼 */
+            .delete-btn {
+                background: #eee;
+            }
+
+            .delete-btn:hover {
+                background: #ddd;
+            }
+
+            /* 등록된 물품 목록 영역 */
+            .item-list {
+                margin-top: 10px;
+                padding-top: 10px;
+                border-top: 1px solid #eee;
+            }
+
+            /* 물품 목록 제목 */
+            .item-list-header {
+                font-size: 14px;
+                font-weight: bold;
+                margin-bottom: 8px;
+                color: #333;
+            }
+
+            /* 각 물품 항목 */
+            .item {
+                display: flex;
+                justify-content: space-between;
+                padding: 5px 0;
+                border-bottom: 1px solid #f0f0f0;
+            }
+
+            .item:last-child {
+                border-bottom: none;
+            }
+
+            /* 물품명 */
+            .item-name {
+                font-size: 13px;
+                color: #333;
+            }
+
+            /* 물품 상세 정보 (수량, 가격) */
+            .item-details {
+                font-size: 13px;
+                color: grey;
+            }
+
+            /* 업체가 없을 때 표시되는 메시지 */
+            .empty-message {
+                text-align: center;
+                padding: 40px;
+                color: grey;
+                font-size: 14px;
+            }
+
+            /* 정보 팝업 내 항목 스타일 */
+            .info-item-popup {
+                padding: 10px 0;
+                border-bottom: 1px solid #eee;
+            }
+
+            .info-item-popup:last-child {
+                border-bottom: none;
+            }
+
+            .info-label-popup {
+                font-size: 12px;
+                color: grey;
+                margin-bottom: 3px;
+            }
+
+            .info-value-popup {
+                font-size: 14px;
+                color: #333;
+                font-weight: 500;
+            }
+        </style>
+    </head>
+    <body class="grey-bg">
+        <%- include('nav.ejs') %>
+        <div class="container">
+            <h1 class="page-header">Order list</h1>
+
+            <!-- 업체 등록 버튼 - 클릭시 openPopup('add') 함수 실행 -->
+            <button class="add-supplier-btn" onclick="openPopup('add')">Add Supplier</button>
+
+            <!-- 업체 목록 영역 -->
+            <div class="supplier-list">
+                <!-- suppliers 배열이 존재하고 길이가 0보다 크면 업체 목록 표시 -->
+                <% if (suppliers && suppliers.length > 0) { %>
+                <!-- forEach로 각 업체를 순회하며 카드 생성 -->
+                <% suppliers.forEach(function(supplier) { %>
+                <div class="supplier-card">
+                    <!-- 업체 헤더: 업체명과 버튼들 -->
+                    <div class="supplier-header">
+                        <div class="supplier-name"><%= supplier.name %></div>
+                        <div class="supplier-actions">
+                            <!-- 정보 버튼: 클릭시 해당 업체의 상세 정보 팝업 표시 -->
+                            <!-- <button class="action-btn info-btn" onclick="showInfo(<%= JSON.stringify(supplier) %>)"> -->
+                                Info
+                            </button>
+                            <!-- 수정 버튼: 수정 페이지로 이동 -->
+                            <button
+                                class="action-btn edit-btn"
+                                onclick="window.location.href='/supplier/edit/<%= supplier._id %>'"
+                            >
+                                Add/Edit Item
+                            </button>
+                            <!-- 삭제 버튼: 삭제 확인 후 서버에 DELETE 요청 -->
+                            <button class="action-btn delete-btn" onclick="deleteSupplier('<%= supplier._id %>')">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 등록된 물품이 있으면 물품 목록 표시 -->
+                    <% if (supplier.items && supplier.items.length > 0) { %>
+                    <div class="item-list">
+                        <div class="item-list-header">등록된 물품</div>
+                        <!-- 각 물품을 순회하며 표시 -->
+                        <% supplier.items.forEach(function(item) { %>
+                        <div class="item">
+                            <span class="item-name"><%= item.name %></span>
+                            <span class="item-details"><%= item.quantity %> | <%= item.price %>원</span>
+                        </div>
+                        <% }) %>
+                    </div>
+                    <% } %>
+                </div>
+                <% }) %> <% } else { %>
+                <!-- 등록된 업체가 없을 때 표시되는 메시지 -->
+                <div class="empty-message">
+                    등록된 업체가 없습니다.<br />
+                    '업체 등록' 버튼을 눌러 새 업체를 추가하세요.
+                </div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- 업체 등록/수정 팝업 -->
+        <div class="popup-overlay" id="popupOverlay">
+            <div class="popup-content">
+                <div class="popup-header" id="popupTitle">업체 등록</div>
+                <!-- 업체 정보 입력 폼 -->
+                <form class="popup-form" action="/supplier/add" method="POST">
+                    <div class="form-group">
+                        <label for="supplierName">업체명 *</label>
+                        <input type="text" id="supplierName" name="name" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">연락처 *</label>
+                        <input type="tel" id="phone" name="phone" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="manager">담당자</label>
+                        <input type="text" id="manager" name="manager" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">이메일</label>
+                        <input type="email" id="email" name="email" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">주소</label>
+                        <textarea id="address" name="address"></textarea>
+                    </div>
+
+                    <!-- 폼 제출 버튼들 -->
+                    <div class="popup-buttons">
+                        <button type="button" class="popup-btn popup-btn-cancel" onclick="closePopup()">취소</button>
+                        <button type="submit" class="popup-btn popup-btn-submit">등록</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 업체 정보 보기 팝업 -->
+        <div class="popup-overlay" id="infoPopup">
+            <div class="popup-content">
+                <div class="popup-header">업체 상세 정보</div>
+                <!-- 업체 상세 정보가 동적으로 삽입될 영역 -->
+                <div id="infoContent"></div>
+                <div class="popup-buttons">
+                    <button type="button" class="popup-btn popup-btn-cancel" onclick="closeInfoPopup()">닫기</button>
+                </div>
+            </div>
+        </div>
+
+        <%- include('navbar-bottom.ejs') %>
+
+        <script>
+            // 팝업 열기 함수
+            // type: 'add' = 새 업체 등록, 'edit' = 업체 수정
+            function openPopup(type) {
+                document.getElementById('popupOverlay').classList.add('active');
+            }
+
+            // 팝업 닫기 함수
+            function closePopup() {
+                document.getElementById('popupOverlay').classList.remove('active');
+            }
+
+            // 업체 상세 정보 팝업 표시 함수
+            // supplier: 업체 객체 (JSON 형태)
+            function showInfo(supplier) {
+                // 정보 내용을 담을 HTML 생성
+                let infoHTML = `
+                <div class="info-item-popup">
+                    <div class="info-label-popup">업체명</div>
+                    <div class="info-value-popup">${supplier.name}</div>
+                </div>
+                <div class="info-item-popup">
+                    <div class="info-label-popup">연락처</div>
+                    <div class="info-value-popup">${supplier.phone || '-'}</div>
+                </div>
+                <div class="info-item-popup">
+                    <div class="info-label-popup">담당자</div>
+                    <div class="info-value-popup">${supplier.manager || '-'}</div>
+                </div>
+                <div class="info-item-popup">
+                    <div class="info-label-popup">이메일</div>
+                    <div class="info-value-popup">${supplier.email || '-'}</div>
+                </div>
+                <div class="info-item-popup">
+                    <div class="info-label-popup">주소</div>
+                    <div class="info-value-popup">${supplier.address || '-'}</div>
+                </div>
+            `;
+
+                // 생성한 HTML을 정보 팝업에 삽입
+                document.getElementById('infoContent').innerHTML = infoHTML;
+                // 정보 팝업 표시
+                document.getElementById('infoPopup').classList.add('active');
+            }
+
+            // 정보 팝업 닫기 함수
+            function closeInfoPopup() {
+                document.getElementById('infoPopup').classList.remove('active');
+            }
+
+            // 팝업 외부 클릭시 팝업 닫기 이벤트 리스너
+            document.getElementById('popupOverlay').addEventListener('click', function (e) {
+                if (e.target === this) {
+                    closePopup();
+                }
+            });
+
+            // 정보 팝업 외부 클릭시 닫기
+            document.getElementById('infoPopup').addEventListener('click', function (e) {
+                if (e.target === this) {
+                    closeInfoPopup();
+                }
+            });
+
+            // 업체 삭제 함수
+            // id: 삭제할 업체의 ObjectId
+            function deleteSupplier(id) {
+                // 사용자에게 삭제 확인
+                if (confirm('정말 이 업체를 삭제하시겠습니까?')) {
+                    // 서버에 DELETE 요청 전송
+                    fetch('/supplier/delete?id=' + id, {
+                        method: 'DELETE',
+                    })
+                        .then((response) => response.text())
+                        .then((data) => {
+                            alert(data); // 서버 응답 메시지 표시
+                            location.reload(); // 페이지 새로고침하여 변경사항 반영
+                        })
+                        .catch((error) => {
+                            console.error('에러:', error);
+                            alert('삭제 실패');
+                        });
+                }
+            }
+        </script>
+    </body>
+</html>

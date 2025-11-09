@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Employee Sign Up</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #f5f5f5;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                padding: 20px;
+            }
+
+            .signup-container {
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                padding: 40px;
+                max-width: 900px;
+                width: 100%;
+            }
+
+            .content-wrapper {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 40px;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .section-left {
+                border-right: 2px solid #e5e7eb;
+            }
+
+            .icon {
+                text-align: center;
+                font-size: 48px;
+                margin-bottom: 20px;
+            }
+
+            h1 {
+                text-align: center;
+                font-size: 20px;
+                font-weight: 600;
+                margin-bottom: 8px;
+                color: #1f2937;
+            }
+
+            .subtitle {
+                text-align: center;
+                color: #6b7280;
+                font-size: 13px;
+                margin-bottom: 30px;
+            }
+
+            .form-group {
+                margin-bottom: 20px;
+            }
+
+            label {
+                display: block;
+                font-size: 13px;
+                font-weight: 600;
+                color: #374151;
+                margin-bottom: 8px;
+            }
+
+            .required {
+                color: #ef4444;
+            }
+
+            input[type='text'],
+            input[type='email'],
+            input[type='password'],
+            input[type='tel'] {
+                width: 100%;
+                padding: 12px;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
+                font-size: 14px;
+                transition: all 0.3s;
+                background-color: #f9fafb;
+            }
+
+            input:focus {
+                outline: none;
+                border-color: #3b82f6;
+                background-color: white;
+            }
+
+            .name-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+            }
+
+            .btn {
+                width: 100%;
+                padding: 14px;
+                border: none;
+                border-radius: 6px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+
+            .btn-primary {
+                background-color: #1e293b;
+                color: white;
+            }
+
+            .btn-primary:hover {
+                background-color: #0f172a;
+            }
+
+            .btn-secondary {
+                background-color: white;
+                color: #1e293b;
+                border: 2px solid #1e293b;
+                margin-bottom: 15px;
+            }
+
+            .btn-secondary:hover {
+                background-color: #f9fafb;
+            }
+
+            .info-text {
+                text-align: center;
+                font-size: 12px;
+                color: #6b7280;
+                margin-top: 10px;
+                line-height: 1.5;
+            }
+
+            .info-text.small {
+                font-size: 11px;
+                margin-top: 20px;
+            }
+
+            .hidden {
+                display: none;
+            }
+
+            .success-message {
+                background-color: #ecfdf5;
+                color: #065f46;
+                padding: 12px;
+                border-radius: 6px;
+                margin-bottom: 20px;
+                font-size: 14px;
+                border-left: 4px solid #10b981;
+            }
+
+            .error {
+                background-color: #fef2f2;
+                color: #dc2626;
+                padding: 12px;
+                border-radius: 6px;
+                margin-bottom: 20px;
+                font-size: 14px;
+                border-left: 4px solid #dc2626;
+            }
+
+            .login-link {
+                text-align: center;
+                margin-top: 20px;
+                font-size: 14px;
+                color: #6b7280;
+            }
+
+            .login-link a {
+                color: #3b82f6;
+                text-decoration: none;
+                font-weight: 600;
+            }
+
+            @media (max-width: 768px) {
+                .content-wrapper {
+                    grid-template-columns: 1fr;
+                    gap: 30px;
+                }
+                .section-left {
+                    border-right: none;
+                    border-bottom: 2px solid #e5e7eb;
+                    padding-bottom: 30px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="signup-container">
+            <div class="content-wrapper">
+                <!-- Left Section: Venue ID Verification -->
+                <div class="section section-left">
+                    <div class="icon">📋</div>
+                    <h1>SIGN UP INFORMATION</h1>
+                    <p class="subtitle">TELL US ABOUT YOUR RESTAURANT</p>
+
+                    <div id="venueIdSection">
+                        <div class="form-group">
+                            <label>VENUE ID</label>
+                            <input type="text" id="venueIdInput" placeholder="ENTER VENUE ID" />
+                        </div>
+
+                        <div class="form-group">
+                            <p class="subtitle" style="margin-bottom: 15px">IS YOUR WORKPLACE ALREADY SIGNED UP?</p>
+                            <button type="button" class="btn btn-secondary" onclick="verifyVenueId()">
+                                JOIN RESTAURANT →
+                            </button>
+                        </div>
+
+                        <p class="info-text">DON'T HAVE VENUE ID?<br />PLEASE ENTER INFORMATION BELOW</p>
+                    </div>
+
+                    <div id="successMessage" class="success-message hidden">
+                        Venue ID verified! Restaurant: <strong id="restaurantName"></strong>
+                    </div>
+                    <div id="errorMessage" class="error hidden"></div>
+                </div>
+
+                <!-- Right Section: Restaurant Information -->
+                <div class="section">
+                    <div class="icon">🏢</div>
+                    <h1>RESTAURANT INFORMATION</h1>
+                    <p class="subtitle">TELL US ABOUT YOUR RESTAURANT</p>
+
+                    <form id="employeeSignupForm" action="/signup/employee" method="POST">
+                        <input type="hidden" name="venueId" id="venueIdHidden" />
+
+                        <div class="name-row">
+                            <div class="form-group">
+                                <label>FIRST NAME<span class="required">*</span></label>
+                                <input type="text" name="firstName" placeholder="FIRST NAME" required />
+                            </div>
+                            <div class="form-group">
+                                <label>LAST NAME<span class="required">*</span></label>
+                                <input type="text" name="lastName" placeholder="LAST NAME" required />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>EMAIL ADDRESS<span class="required">*</span></label>
+                            <input type="email" name="email" placeholder="ENTER YOUR EMAIL" required />
+                        </div>
+
+                        <div class="form-group">
+                            <label>PHONE NUMBER<span class="required">*</span></label>
+                            <input type="tel" name="phoneNumber" placeholder="ENTER PHONE NUMBER" required />
+                        </div>
+
+                        <div class="form-group">
+                            <label>PASSWORD<span class="required">*</span></label>
+                            <input type="password" name="password" placeholder="PHONE NUMBER" required minlength="8" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>CONFIRM PASSWORD<span class="required">*</span></label>
+                            <input type="password" name="confirmPassword" placeholder="PHONE NUMBER" required />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>REQUEST TO JOIN →</button>
+
+                        <p class="info-text small">
+                            UNIQUE VENUE ID WILL BE GENERATED<br />
+                            PLEASE SHARE WITH TEAM TO JOIN<br />
+                            UNIQUE CODE WILL BE SENT TO EMAIL
+                        </p>
+                    </form>
+
+                    <div class="login-link">Already have an account? <a href="/login">Login</a></div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            async function verifyVenueId() {
+                const venueId = document.getElementById('venueIdInput').value.trim();
+                const errorDiv = document.getElementById('errorMessage');
+                const successDiv = document.getElementById('successMessage');
+                const submitBtn = document.getElementById('submitBtn');
+
+                errorDiv.classList.add('hidden');
+                successDiv.classList.add('hidden');
+
+                if (!venueId) {
+                    errorDiv.textContent = 'Please enter a Venue ID';
+                    errorDiv.classList.remove('hidden');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/verify-venue', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ venueId }),
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        successDiv.classList.remove('hidden');
+                        document.getElementById('restaurantName').textContent = data.restaurantName;
+                        document.getElementById('venueIdHidden').value = venueId;
+                        submitBtn.disabled = false;
+                    } else {
+                        errorDiv.textContent = data.message;
+                        errorDiv.classList.remove('hidden');
+                        submitBtn.disabled = true;
+                    }
+                } catch (error) {
+                    errorDiv.textContent = 'Error verifying Venue ID';
+                    errorDiv.classList.remove('hidden');
+                    submitBtn.disabled = true;
+                }
+            }
+
+            // Enter key support for venue ID input
+            document.getElementById('venueIdInput').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    verifyVenueId();
+                }
+            });
+
+            // Password confirmation validation
+            document.getElementById('employeeSignupForm').addEventListener('submit', function (e) {
+                const password = document.querySelector('input[name="password"]').value;
+                const confirmPassword = document.querySelector('input[name="confirmPassword"]').value;
+
+                if (password !== confirmPassword) {
+                    e.preventDefault();
+                    const errorDiv = document.getElementById('errorMessage');
+                    errorDiv.textContent = 'Passwords do not match';
+                    errorDiv.classList.remove('hidden');
+                }
+            });
+        </script>
+    </body>
+</html>

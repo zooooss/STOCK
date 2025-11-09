@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>List - Stock</title>
+        <link href="/main.css" rel="stylesheet" />
+    </head>
+    <body class="grey-bg">
+<div class="container">
+<%- include('nav.ejs')%>
+
+        <div class="white-bg">
+            <%for(let i=0;i<customer.length;i++){%>
+            <div class="list-box">
+                <h4>
+                    <a href="/detail/<%= customer[i]._id %>">
+                    <%= customer[i].R_name %>
+                </a>
+            <a href="/edit/<%= customer[i]._id %>">
+                ✏️
+            </a>
+            <span class="delete" data-id="<%= customer[i]._id %>">🗑️</span>
+            </h4>
+                <p><%=customer[i].ph %></p>
+            </div>
+            <%}%>
+        </div>
+        </div>
+        <script>
+    for(let i = 0; i < '<%= customer.length %>'; i++){
+document.querySelectorAll('.delete')[i].addEventListener('click',function(e){
+fetch('/delete?docid='+e.target.dataset.id,{
+    method : 'DELETE',
+})                    .then(data => {
+                        console.log('서버 응답:', data);
+                        alert('삭제되었습니다.');
+location.reload();
+                    }).then((r)=>r.text).then((r)=>{
+                        e.target.parentElement.parentElement.style.display = 'none'
+                    }) //서버에서 보내는게 문자일경우 text사용, object/array일 경우 json사용
+//브라우저콘솔창에 출력되는거임 !! 서버에서 보낸 메세지 or 데이터
+})
+}
+        </script>
+        <%- include('navbar-bottom.ejs')%>
+    </body>
+</html>

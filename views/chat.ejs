@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Team Chat</title>
+        <style>
+            * {
+                box-sizing: border-box;
+                font-family: 'Inter', sans-serif;
+            }
+
+            body {
+                background: white;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            /* Header */
+            .header {
+                width: 100%;
+                max-width: 480px;
+                background: white;
+                padding: 20px 0;
+                text-align: center;
+            }
+
+            .header h1 {
+                font-size: 20px;
+                font-weight: 700;
+                margin: 0 0 10px;
+            }
+
+            .nav-buttons {
+                display: flex;
+                justify-content: center;
+                gap: 20px;
+            }
+
+            .nav-button {
+                border: none;
+                background: none;
+                font-weight: 600;
+                padding: 8px 20px;
+                border-radius: 20px;
+                cursor: pointer;
+                color: #111;
+            }
+
+            .nav-button.active {
+                background: #111;
+                color: white;
+            }
+
+            /* Chat container */
+            .chat-container {
+                width: 100%;
+                max-width: 480px;
+                background: white;
+                display: flex;
+                flex-direction: column;
+                padding: 20px;
+                min-height: 75vh;
+            }
+
+            .chat-message {
+                display: flex;
+                flex-direction: column;
+                margin-bottom: 20px;
+            }
+
+            .sender {
+                font-size: 12px;
+                font-weight: 700;
+                margin-bottom: 4px;
+                margin-left: 6px;
+            }
+
+            .bubble {
+                display: inline-flex;
+                align-items: center;
+                background: white;
+                border: 2px solid #111;
+                border-radius: 14px;
+                padding: 10px 14px;
+                max-width: 80%;
+                font-size: 14px;
+                line-height: 1.4;
+                word-break: keep-all;
+            }
+
+            .bubble.me {
+                background: #111;
+                color: white;
+                align-self: flex-end;
+            }
+
+            /* Chat input area */
+            .chat-input-container {
+                width: 100%;
+                max-width: 480px;
+                display: flex;
+                padding: 10px 20px 30px;
+                background: white;
+                border-top: 1px solid #ccc;
+            }
+
+            .chat-input {
+                flex: 1;
+                padding: 12px 14px;
+                border-radius: 20px;
+                border: 2px solid #ccc;
+                outline: none;
+            }
+
+            .send-button {
+                background: #ccc;
+                border: none;
+                border-radius: 20px;
+                padding: 0 20px;
+                margin-left: 10px;
+                font-weight: 600;
+                color: #666;
+                cursor: pointer;
+            }
+
+            .send-button.active {
+                background: #111;
+                color: white;
+            }
+        </style>
+    </head>
+    <body>
+        <%= JSON.stringify(result) %>
+        <!-- Header -->
+        <header class="header">
+            <h1><%= result.restaurantName %></h1>
+            <div class="nav-buttons">
+                <button class="nav-button active">TEAM CHAT</button>
+                <button class="nav-button">ORDERLIST <span style="color: red">12</span></button>
+                <button class="nav-button">CART</button>
+            </div>
+        </header>
+
+        <!-- Chat section -->
+        <section class="chat-container">
+            <div class="chat-message">
+                <div class="sender">JIWOO</div>
+                <div class="bubble">YES, WE ARE OUT OF SALMON</div>
+            </div>
+
+            <div class="chat-message">
+                <div class="sender">PICCAHU</div>
+                <div class="bubble">I THINK WE ARE LOW ON TOFU</div>
+            </div>
+
+            <div class="chat-message">
+                <div class="sender">HYO YOUNG</div>
+                <div class="bubble">WE DON’T HAVE RICE AND PARSLEY</div>
+            </div>
+
+            <div class="chat-message mine">
+                <div class="bubble me">
+                    OK, LET'S ADD THAT TO ORDERLIST<br />
+                    OH, MAYBE ADD MAYONNAISE
+                </div>
+            </div>
+        </section>
+
+        <!-- Input -->
+        <div class="chat-input-container">
+            <input class="chat-input" placeholder="Type your message..." />
+            <button class="send-button">SEND</button>
+        </div>
+        <!-- 이 페이지에서 소켓 사용하므로 여기에도 소켓 라이브러리 설치해줘야함! -->
+        <script src="https://cdn.jsdelivr.net/npm/socket.io@4.7.2/client-dist/socket.io.min.js"></script>
+        <script>
+            const socket = io();
+            //방참여
+            socket.on('connect', () => {
+                console.log('socket connected!');
+                socket.emit('joinRoom', { room: '1' });
+            });
+            document.querySelector('.send-button').addEventListener('click', function () {
+                socket.emit('message', { msg: 'Hi', room: '1' });
+            });
+
+            socket.on('broadcast', (data) => {
+                console.log(data);
+            });
+        </script>
+    </body>
+</html>

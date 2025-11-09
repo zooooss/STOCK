@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <link href="/main.css" rel="stylesheet" />
+    </head>
+    <body class="grey-bg">
+        <%- include('nav.ejs')%>
+        <form class="form-box" action="/write" method="POST" enctype="multipart/form-data">
+            <!-- enctype 해놔야 파일이 서버로 잘 전송됨 -->
+            <h4>글쓰기</h4>
+            <input name="title" type="text" />
+            <input name="content" type="text" />
+            <input name="img1" type="file" accept="image/*" />
+            <!-- 서버에서 이미지가 맞는지 확장자 검사 한 번 더 필요 -->
+            <!-- 서버에서 업로드한 파일 다루려면 multer/formidable 라이브러리 사용하면 쉽게 관리 -->
+            <!-- npm install multer multer-s3 @aws-sdk/client-s3 -->
+            <!-- 이미지 여러장 업로드 원하면 accept 속성 뒤에 multiple만 적어주면 됨! -->
+            <button type="submit">전송</button>
+        </form>
+        <%- include('navbar-bottom.ejs')%>
+    </body>
+</html>

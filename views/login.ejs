@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Login - Stock</title>
+        <link href="/main.css" rel="stylesheet" />
+    </head>
+    <body class="white-bg">
+        <div class="login-container">
+            <h1>StockUp</h1>
+            <form class="form-box" action="/login" method="POST">
+                <label for="username">EMAIL</label>
+                <input name="username" />
+                <label for="password">PASSWORD</label>
+                <input name="password" type="password" />
+                <button type="submit">Login</button>
+                <div class="options">FORGOT PASSWORD?</div>
+                <div class="checkbox">
+                    <input type="checkbox" id="auto-login" name="autoLogin" />
+                    <label for="auto-login">Automatically log in in future</label>
+                </div>
+
+                <div class="signup">
+                    DON'T HAVE ACCOUNT?<br />
+                    <a href="/signup">Sign up</a>
+                </div>
+            </form>
+        </div>
+    </body>
+</html>
