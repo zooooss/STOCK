@@ -18,7 +18,6 @@
                 align-items: center;
             }
 
-            /* Header */
             .header {
                 width: 100%;
                 max-width: 480px;
@@ -54,7 +53,6 @@
                 color: white;
             }
 
-            /* Chat container */
             .chat-container {
                 width: 100%;
                 max-width: 480px;
@@ -63,6 +61,7 @@
                 flex-direction: column;
                 padding: 20px;
                 min-height: 75vh;
+                overflow-y: auto;
             }
 
             .chat-message {
@@ -71,11 +70,20 @@
                 margin-bottom: 20px;
             }
 
+            .chat-message.mine {
+                align-items: flex-end;
+            }
+
             .sender {
                 font-size: 12px;
                 font-weight: 700;
                 margin-bottom: 4px;
                 margin-left: 6px;
+            }
+
+            .chat-message.mine .sender {
+                margin-right: 6px;
+                margin-left: 0;
             }
 
             .bubble {
@@ -94,10 +102,8 @@
             .bubble.me {
                 background: #111;
                 color: white;
-                align-self: flex-end;
             }
 
-            /* Chat input area */
             .chat-input-container {
                 width: 100%;
                 max-width: 480px;
@@ -113,6 +119,8 @@
                 border-radius: 20px;
                 border: 2px solid #ccc;
                 outline: none;
+                resize: vertical; /* 사용자가 크기 조절 가능 */
+                min-height: 44px;
             }
 
             .send-button {
@@ -133,62 +141,116 @@
         </style>
     </head>
     <body>
-        <%= JSON.stringify(result) %>
         <!-- Header -->
         <header class="header">
-            <h1><%= result.restaurantName %></h1>
+            <h1><%= result.restaurantName.toUpperCase() %></h1>
             <div class="nav-buttons">
                 <button class="nav-button active">TEAM CHAT</button>
-                <button class="nav-button">ORDERLIST <span style="color: red">12</span></button>
+                <button class="nav-button" onclick="location.href='/orderlist'">ORDERLIST</button>
                 <button class="nav-button">CART</button>
             </div>
         </header>
 
         <!-- Chat section -->
-        <section class="chat-container">
-            <div class="chat-message">
-                <div class="sender">JIWOO</div>
-                <div class="bubble">YES, WE ARE OUT OF SALMON</div>
+        <section class="chat-container" id="chatContainer">
+            <% if (result.messages && result.messages.length > 0) { %> <% result.messages.forEach(function(msg) { %>
+            <div class="chat-message <%= msg.senderId === currentUserId ? 'mine' : '' %>">
+                <div class="sender"><%= msg.senderName.toUpperCase() %></div>
+                <div class="bubble <%= msg.senderId === currentUserId ? 'me' : '' %>"><%= msg.text %></div>
             </div>
-
-            <div class="chat-message">
-                <div class="sender">PICCAHU</div>
-                <div class="bubble">I THINK WE ARE LOW ON TOFU</div>
-            </div>
-
-            <div class="chat-message">
-                <div class="sender">HYO YOUNG</div>
-                <div class="bubble">WE DON’T HAVE RICE AND PARSLEY</div>
-            </div>
-
-            <div class="chat-message mine">
-                <div class="bubble me">
-                    OK, LET'S ADD THAT TO ORDERLIST<br />
-                    OH, MAYBE ADD MAYONNAISE
-                </div>
-            </div>
+            <% }); %> <% } else { %>
+            <p style="text-align: center; color: #999">No messages yet. Start the conversation!</p>
+            <% } %>
         </section>
 
         <!-- Input -->
         <div class="chat-input-container">
-            <input class="chat-input" placeholder="Type your message..." />
-            <button class="send-button">SEND</button>
+            <textarea class="chat-input" id="messageInput" placeholder="Type your message..." rows="1"></textarea>
+            <button class="send-button" id="sendBtn">SEND</button>
         </div>
-        <!-- 이 페이지에서 소켓 사용하므로 여기에도 소켓 라이브러리 설치해줘야함! -->
+
+        <!-- Socket.IO -->
         <script src="https://cdn.jsdelivr.net/npm/socket.io@4.7.2/client-dist/socket.io.min.js"></script>
         <script>
             const socket = io();
-            //방참여
+
+            const input = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const chatContainer = document.getElementById('chatContainer');
+            const currentUserId = '<%= currentUserId %>';
+
+            // HTML escape 함수
+            function escapeHtml(unsafe) {
+                return unsafe
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            // 소켓 연결 시 방 참여
             socket.on('connect', () => {
-                console.log('socket connected!');
-                socket.emit('joinRoom', { room: '1' });
-            });
-            document.querySelector('.send-button').addEventListener('click', function () {
-                socket.emit('message', { msg: 'Hi', room: '1' });
+                console.log('✅ Socket connected!');
+                socket.emit('ask-join');
             });
 
-            socket.on('broadcast', (data) => {
-                console.log(data);
+            // 방 참여 성공
+            socket.on('joined-room', (roomId) => {
+                console.log('✅ Joined room:', roomId);
+            });
+
+            // 메시지 전송
+            function sendMessage() {
+                const text = input.value.trim();
+                if (!text) return;
+
+                // 서버로 메시지 전송만 하고, UI 추가는 서버 응답 받은 후에!
+                socket.emit('send-message', { text });
+                input.value = '';
+                sendBtn.classList.remove('active');
+            }
+
+            sendBtn.addEventListener('click', sendMessage);
+
+            // 입력 시 버튼 활성화
+            input.addEventListener('input', () => {
+                if (input.value.trim()) {
+                    sendBtn.classList.add('active');
+                } else {
+                    sendBtn.classList.remove('active');
+                }
+            });
+            // 메시지 UI에 추가
+            function addMessageToUI(msg, isMine) {
+                const wrap = document.createElement('div');
+                wrap.className = 'chat-message' + (isMine ? ' mine' : '');
+
+                const senderDiv = document.createElement('div');
+                senderDiv.className = 'sender';
+                senderDiv.textContent = msg.senderName.toUpperCase();
+
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble' + (isMine ? ' me' : '');
+                bubble.innerHTML = escapeHtml(msg.text).replace(/\n/g, '<br/>');
+
+                wrap.appendChild(senderDiv);
+                wrap.appendChild(bubble);
+                chatContainer.appendChild(wrap);
+
+                // 스크롤 맨 아래로
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+            // 새 메시지 수신
+            socket.on('new-message', (msg) => {
+                console.log('📨 New message:', msg);
+                const isMine = msg.senderId === currentUserId;
+                addMessageToUI(msg, isMine);
+            });
+
+            // 페이지 로드 시 스크롤 맨 아래로
+            window.addEventListener('load', () => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
             });
         </script>
     </body>

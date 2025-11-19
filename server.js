@@ -22,20 +22,19 @@ const LocalStrategy = require('passport-local');
 const MongoStore = require('connect-mongo');
 //connect-mongo 라이브러리로 세션관리.
 
+const sessionMiddleware = session({
+    secret: '암호화에 쓸 비번',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 60 * 60 * 1000, httpOnly: true, secure: false },
+    // 개발 환경에서는 false, 프로덕션에서는 true
+    store: MongoStore.create({
+        mongoUrl: process.env.DB_URL,
+        dbName: 'stock',
+    }),
+});
+app.use(sessionMiddleware);
 app.use(passport.initialize());
-app.use(
-    session({
-        secret: '암호화에 쓸 비번',
-        resave: false,
-        saveUninitialized: false,
-        cookie: { maxAge: 60 * 60 * 1000 },
-        store: MongoStore.create({
-            mongoUrl: process.env.DB_URL,
-            dbName: 'stock',
-        }),
-    })
-);
-
 app.use(passport.session());
 
 //아래 두 단락은 사진업로드 관련
@@ -97,14 +96,40 @@ app.get('/', (req, res) => {
 });
 
 // app.use(CheckLogIn); 이 코드 사용시 아래에 있는 모든 api의 요청과 응답 사이에 미드웨어 실행! 보통 서버코드 가장 위에 적용시켜줌!
-
 app.get('/chat', CheckLogIn, async (req, res) => {
-    // console.log(req.user._id);
-    // 아래코드는 chat에서 member중에 저 아이디가 있는 chat을 모두 가져와주는 것.
-    let result = await db.collection('chat').findOne({
-        member: req.user._id, // member 배열에 현재 유저의 _id가 포함된 chat
-    });
-    res.render('chat.ejs', { result: result });
+    try {
+        // 현재 유저가 member로 포함된 채팅방 찾기
+        let chatRoom = await db.collection('chat').findOne({
+            member: req.user._id,
+        });
+
+        if (!chatRoom) {
+            return res.status(404).send('채팅방을 찾을 수 없습니다.');
+        }
+
+        // 메시지에 사용자 이름 추가
+        const messagesWithNames = await Promise.all(
+            chatRoom.messages.map(async (msg) => {
+                const user = await db.collection('user').findOne({ _id: new ObjectId(msg.sender) });
+                return {
+                    ...msg,
+                    senderName: user ? user.firstName : 'Unknown',
+                    senderId: msg.sender.toString(),
+                };
+            })
+        );
+
+        res.render('chat.ejs', {
+            result: {
+                ...chatRoom,
+                messages: messagesWithNames,
+            },
+            currentUserId: req.user._id.toString(),
+        });
+    } catch (err) {
+        console.error('채팅 페이지 로드 에러:', err);
+        res.status(500).send('서버 에러');
+    }
 });
 
 app.get('/main', (req, res) => {
@@ -239,7 +264,7 @@ app.post('/login', async (req, res, next) => {
         if (!user) return res.status(401).json(info.message);
         req.logIn(user, (err) => {
             if (err) return next(err);
-            res.redirect('/list');
+            res.redirect('/chat');
         });
     })(req, res, next);
 });
@@ -298,6 +323,7 @@ app.post('/signup/owner', async (req, res) => {
             phoneNumber: phoneNumber,
             role: 'owner',
             restaurantId: restaurantResult.insertedId,
+            name: restaurantName,
             venueId: venueId,
             status: 'active',
             createdAt: new Date(),
@@ -390,6 +416,7 @@ app.post('/signup/employee', async (req, res) => {
             phoneNumber: phoneNumber,
             role: 'employee',
             restaurantId: restaurant._id,
+            restaurantName: restaurant.name,
             venueId: venueId,
             status: 'pending', // 오너 승인 대기
             createdAt: new Date(),
@@ -436,16 +463,20 @@ app.post('/approve-employee/:email', async (req, res) => {
                 { email: employeeEmail, restaurantId: req.user.restaurantId },
                 { $set: { status: 'active', approvedAt: new Date() } }
             );
+
+        // 업데이트 후 다시 직원 정보 가져오기
+        const employee = await db
+            .collection('user')
+            .findOne({ email: employeeEmail, restaurantId: req.user.restaurantId });
+
         // 채팅방에 직원 추가
-        await db.collection('chat').updateOne(
-            { restaurantId: req.user.restaurantId },
-            { $addToSet: { member: employee._id } } // 중복 방지를 위해 addToSet 사용
-        );
+        await db
+            .collection('chat')
+            .updateOne({ restaurantId: req.user.restaurantId }, { $addToSet: { member: employee._id } });
 
         console.log('✅ Employee approved and added to chat room');
 
         // 직원에게 승인 알림
-        const employee = await db.collection('user').findOne({ email: employeeEmail });
         if (employee) {
             await db.collection('notifications').insertOne({
                 userId: employee._id,
@@ -455,8 +486,7 @@ app.post('/approve-employee/:email', async (req, res) => {
                 createdAt: new Date(),
             });
         }
-
-        res.redirect('/pending-employees');
+        res.redirect('/mypage');
     } catch (err) {
         console.error(err);
         res.status(500).send('Server error');
@@ -519,57 +549,31 @@ passport.use(
         }
     })
 );
-// app.get('/signup', (req, res) => {
-//     res.render('signup.ejs');
-// });
 
-// app.get('/mypage', (req, res) => {
-//     // 로그인 확인
-//     if (!req.user) {
-//         return res.redirect('/login');
-//     }
-//     let result = req.user;
-//     console.log('현재 로그인된 사용자:', result);
+app.get('/mypage', CheckLogIn, async (req, res) => {
+    try {
+        let result = req.user;
+        console.log('현재 로그인된 사용자:', result);
 
-//     console.log('사용자명:', result.username);
+        // 오너인 경우 승인 대기 중인 직원 수 조회
+        let pendingCount = 0;
+        if (result.role === 'owner') {
+            pendingCount = await db.collection('user').countDocuments({
+                restaurantId: result.restaurantId,
+                status: 'pending',
+            });
+        }
 
-//     console.log('사용자 ObjectId:', result._id);
-
-//     res.render('mypage.ejs', {
-//         user: result,
-//         username: result.username,
-//     });
-// });
-
-// app.get('/signup', (req, res) => {
-//     res.render('signup.ejs');
-// });
-
-// app.post('/signup', async (req, res) => {
-//     let hashedresult = await bcrypt.hash(req.body.password, 10);
-//     try {
-//         const { username, password } = req.body;
-//         // 1. username 빈 칸 확인
-//         if (!username || username.trim() === '') {
-//             return res.status(400).send('Username cannot be empty');
-//         }
-//         // 2. password 길이 확인
-//         if (!password || password.length < 8) {
-//             return res.status(400).send('Password must be at least 8 characters long');
-//         }
-//         // 3. username 중복 확인
-//         const existingUser = await db.collection('user').findOne({ username });
-//         if (existingUser) {
-//             return res.status(400).send('Username already exists');
-//         }
-//         // 4. 유효하면 DB에 저장
-//         await db.collection('user').insertOne({ username: username, password: hashedresult });
-//         res.redirect('/login');
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).send('Server error');
-//     }
-// });
+        res.render('mypage.ejs', {
+            user: result,
+            userfirstname: result.firstName,
+            pendingCount: pendingCount,
+        });
+    } catch (err) {
+        console.error('마이페이지 로드 에러:', err);
+        res.status(500).send('서버 에러');
+    }
+});
 
 app.get('/orderlist', async (req, res) => {
     let suppliers = await db.collection('supplier').find().toArray();
@@ -579,17 +583,113 @@ app.get('/orderlist', async (req, res) => {
     });
 });
 
+io.engine.use(sessionMiddleware);
+
 io.on('connection', (socket) => {
-    console.log('websocket 연결됨');
-    // 방 참가 이벤트
-    socket.on('joinRoom', (data) => {
-        socket.join(data.room);
-        console.log(`✅ ${data.room} 방에 참여함`);
+    console.log('🔌 socket connected');
+
+    // 세션 정보 확인
+    const session = socket.request.session;
+    console.log('Session:', session);
+    console.log('Session passport:', session?.passport);
+
+    // 채팅 참여 요청
+    socket.on('ask-join', async () => {
+        try {
+            const session = socket.request.session;
+            const userId = session?.passport?.user?.id;
+
+            if (!userId) {
+                console.log('❌ 로그인 정보 없음');
+                return;
+            }
+
+            // 현재 유저가 member로 포함된 채팅방 찾기
+            const chatDoc = await db.collection('chat').findOne({
+                member: new ObjectId(userId),
+            });
+
+            if (!chatDoc) {
+                console.log('❌ 해당 유저의 채팅방 없음');
+                return;
+            }
+
+            const roomId = chatDoc._id.toString();
+            socket.join(roomId);
+
+            // 유저 이름 가져오기
+            const user = await db.collection('user').findOne({ _id: new ObjectId(userId) });
+            console.log(`✅ 유저 ${user?.firstName || userId}가 방 ${roomId} 참여`);
+
+            socket.emit('joined-room', roomId);
+        } catch (err) {
+            console.error('❌ ask-join 에러:', err);
+        }
     });
-    socket.on('message', (data) => {
-        console.log(data);
+
+    // 메시지 전송
+    socket.on('send-message', async (data) => {
+        try {
+            const session = socket.request.session;
+            const userId = session?.passport?.user?.id;
+
+            if (!userId) {
+                console.log('❌ 로그인 정보 없음');
+                return;
+            }
+
+            // 현재 유저가 member로 포함된 채팅방 찾기
+            const chatDoc = await db.collection('chat').findOne({
+                member: new ObjectId(userId),
+            });
+
+            if (!chatDoc) {
+                console.log('❌ 채팅방 없음');
+                return;
+            }
+
+            // 유저 정보 가져오기
+            const user = await db.collection('user').findOne({ _id: new ObjectId(userId) });
+
+            if (!user) {
+                console.log('❌ 유저 정보 없음');
+                return;
+            }
+
+            const roomId = chatDoc._id.toString();
+
+            const newMsg = {
+                sender: new ObjectId(userId),
+                senderName: user.firstName,
+                text: data.text,
+                createdAt: new Date(),
+            };
+
+            // DB에 메시지 저장
+            await db.collection('chat').updateOne({ _id: chatDoc._id }, { $push: { messages: newMsg } });
+
+            // 같은 방의 모든 유저에게 브로드캐스트
+            io.to(roomId).emit('new-message', {
+                ...newMsg,
+                sender: newMsg.sender.toString(),
+                senderId: userId.toString(),
+            });
+
+            console.log(`✅ 메시지 전송 완료: ${user.firstName} - ${data.text}`);
+        } catch (err) {
+            console.error('❌ send-message 에러:', err);
+        }
     });
-    socket.on('message', (data) => {
-        io.to(data.room).emit('broadcast', data.msg);
+});
+
+app.get('/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            console.log('❌ 세션 종료 실패:', err);
+            return res.status(500).send('Logout failed');
+        }
+
+        res.clearCookie('connect.sid'); // 세션 쿠키 삭제
+        res.redirect('/login'); // 로그인 페이지로 이동
     });
 });

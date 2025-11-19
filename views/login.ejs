@@ -3,27 +3,198 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Login - Stock</title>
-        <link href="/main.css" rel="stylesheet" />
+        <title>Login - StockUp</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            }
+
+            body {
+                background-color: #f5f5f5;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                padding: 20px;
+            }
+
+            .login-container {
+                background-color: white;
+                /* border: 3px solid #0066ff; */
+                border-radius: 8px;
+                padding: 60px 50px;
+                width: 100%;
+                max-width: 480px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+
+            .logo-section {
+                text-align: center;
+                margin-bottom: 60px;
+            }
+
+            .logo-main {
+                font-size: 48px;
+                font-weight: 700;
+                color: #000;
+                margin-bottom: 5px;
+            }
+
+            .form-box {
+                display: flex;
+                flex-direction: column;
+            }
+
+            label {
+                font-size: 13px;
+                font-weight: 600;
+                color: #000;
+                margin-bottom: 8px;
+                letter-spacing: 0.5px;
+            }
+
+            input[type='text'],
+            input[type='email'],
+            input[type='password'] {
+                width: 100%;
+                padding: 14px 16px;
+                margin-bottom: 20px;
+                border: none;
+                background-color: #f5f5f5;
+                border-radius: 6px;
+                font-size: 14px;
+                color: #333;
+                transition: background-color 0.2s;
+            }
+
+            input[type='text']::placeholder,
+            input[type='email']::placeholder,
+            input[type='password']::placeholder {
+                color: #999;
+                text-transform: uppercase;
+                font-size: 12px;
+            }
+
+            input[type='text']:focus,
+            input[type='email']:focus,
+            input[type='password']:focus {
+                outline: none;
+                background-color: #ebebeb;
+            }
+
+            .login-btn {
+                width: 100%;
+                padding: 16px;
+                background-color: white;
+                border: 2px solid #e0e0e0;
+                border-radius: 6px;
+                font-size: 16px;
+                font-weight: 600;
+                color: #000;
+                cursor: pointer;
+                margin-bottom: 15px;
+                transition: all 0.2s;
+            }
+
+            .login-btn:hover {
+                background-color: #f8f8f8;
+                border-color: #ccc;
+            }
+
+            .forgot-password {
+                text-align: center;
+                color: #999;
+                font-size: 13px;
+                margin-bottom: 20px;
+                cursor: pointer;
+            }
+
+            .forgot-password:hover {
+                color: #666;
+            }
+
+            .checkbox-container {
+                display: flex;
+                align-items: center;
+                margin-bottom: 30px;
+            }
+
+            input[type='checkbox'] {
+                width: 18px;
+                height: 18px;
+                margin-right: 10px;
+                cursor: pointer;
+            }
+
+            .checkbox-container label {
+                font-size: 14px;
+                font-weight: 400;
+                color: #333;
+                margin: 0;
+                cursor: pointer;
+            }
+
+            .signup-section {
+                text-align: center;
+                padding-top: 20px;
+                border-top: 1px solid #e0e0e0;
+            }
+
+            .signup-text {
+                color: #999;
+                font-size: 13px;
+                margin-bottom: 15px;
+            }
+
+            .signup-btn {
+                width: 100%;
+                padding: 16px;
+                background-color: #1a1a1a;
+                border: none;
+                border-radius: 6px;
+                font-size: 16px;
+                font-weight: 600;
+                color: white;
+                cursor: pointer;
+                transition: background-color 0.2s;
+                text-decoration: none;
+                display: block;
+                text-align: center;
+            }
+
+            .signup-btn:hover {
+                background-color: #333;
+            }
+        </style>
     </head>
-    <body class="white-bg">
+    <body>
         <div class="login-container">
-            <h1>StockUp</h1>
+            <div class="logo-section">
+                <div class="logo-main">StockUp</div>
+            </div>
+
             <form class="form-box" action="/login" method="POST">
-                <label for="username">EMAIL</label>
-                <input name="username" />
+                <label for="email">EMAIL</label>
+                <input type="email" id="email" name="username" placeholder="ENTER YOUR EMAIL" required />
+
                 <label for="password">PASSWORD</label>
-                <input name="password" type="password" />
-                <button type="submit">Login</button>
-                <div class="options">FORGOT PASSWORD?</div>
-                <div class="checkbox">
+                <input type="password" id="password" name="password" placeholder="ENTER YOUR PASSWORD" required />
+
+                <button type="submit" class="login-btn">login</button>
+
+                <div class="forgot-password">FORGOT PASSWORD?</div>
+
+                <div class="checkbox-container">
                     <input type="checkbox" id="auto-login" name="autoLogin" />
                     <label for="auto-login">Automatically log in in future</label>
                 </div>
 
-                <div class="signup">
-                    DON'T HAVE ACCOUNT?<br />
-                    <a href="/signup">Sign up</a>
+                <div class="signup-section">
+                    <div class="signup-text">DON'T HAVE ACCOUNT?</div>
+                    <a href="/signup/employee" class="signup-btn">Sign up</a>
                 </div>
             </form>
         </div>

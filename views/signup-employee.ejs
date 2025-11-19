@@ -165,15 +165,15 @@
             }
 
             .error {
-                background-color: #fef2f2;
-                color: #dc2626;
+                background-color: #fef2f2; !important;
+                color: #dc2626; !important;
                 padding: 12px;
                 border-radius: 6px;
                 margin-bottom: 20px;
                 font-size: 14px;
-                border-left: 4px solid #dc2626;
-            }
+                border-left: 4px solid #dc2626; !important;
 
+            }
             .login-link {
                 text-align: center;
                 margin-top: 20px;
@@ -206,7 +206,7 @@
                 <!-- Left Section: Venue ID Verification -->
                 <div class="section section-left">
                     <div class="icon">📋</div>
-                    <h1>SIGN UP INFORMATION</h1>
+                    <h1>RESTAURANT INFORMATION</h1>
                     <p class="subtitle">TELL US ABOUT YOUR RESTAURANT</p>
 
                     <div id="venueIdSection">
@@ -218,7 +218,7 @@
                         <div class="form-group">
                             <p class="subtitle" style="margin-bottom: 15px">IS YOUR WORKPLACE ALREADY SIGNED UP?</p>
                             <button type="button" class="btn btn-secondary" onclick="verifyVenueId()">
-                                JOIN RESTAURANT →
+                                Verify Venue ID
                             </button>
                         </div>
 
@@ -228,13 +228,13 @@
                     <div id="successMessage" class="success-message hidden">
                         Venue ID verified! Restaurant: <strong id="restaurantName"></strong>
                     </div>
-                    <div id="errorMessage" class="error hidden"></div>
+                    <div id="errorMessage1" class="error hidden"></div>
                 </div>
 
                 <!-- Right Section: Restaurant Information -->
                 <div class="section">
                     <div class="icon">🏢</div>
-                    <h1>RESTAURANT INFORMATION</h1>
+                    <h1>SIGN UP INFORMATION</h1>
                     <p class="subtitle">TELL US ABOUT YOUR RESTAURANT</p>
 
                     <form id="employeeSignupForm" action="/signup/employee" method="POST">
@@ -263,15 +263,21 @@
 
                         <div class="form-group">
                             <label>PASSWORD<span class="required">*</span></label>
-                            <input type="password" name="password" placeholder="PHONE NUMBER" required minlength="8" />
+                            <input
+                                type="password"
+                                name="password"
+                                placeholder="ENTER PASSWORD"
+                                required
+                                minlength="8"
+                            />
                         </div>
 
                         <div class="form-group">
                             <label>CONFIRM PASSWORD<span class="required">*</span></label>
-                            <input type="password" name="confirmPassword" placeholder="PHONE NUMBER" required />
+                            <input type="password" name="confirmPassword" placeholder="CONFIRM PASSWORD" required />
                         </div>
-
-                        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>REQUEST TO JOIN →</button>
+                        <div id="errorMessage2" class="error hidden"></div>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">REQUEST TO JOIN →</button>
 
                         <p class="info-text small">
                             UNIQUE VENUE ID WILL BE GENERATED<br />
@@ -284,70 +290,122 @@
                 </div>
             </div>
         </div>
-
         <script>
+            let venueVerified = false;
+
             async function verifyVenueId() {
                 const venueId = document.getElementById('venueIdInput').value.trim();
-                const errorDiv = document.getElementById('errorMessage');
+                const errorDiv1 = document.getElementById('errorMessage1'); // 왼쪽
                 const successDiv = document.getElementById('successMessage');
-                const submitBtn = document.getElementById('submitBtn');
 
-                errorDiv.classList.add('hidden');
+                errorDiv1.classList.add('hidden');
                 successDiv.classList.add('hidden');
 
                 if (!venueId) {
-                    errorDiv.textContent = 'Please enter a Venue ID';
-                    errorDiv.classList.remove('hidden');
+                    errorDiv1.textContent = 'Please enter a Venue ID';
+                    errorDiv1.classList.remove('hidden');
                     return;
                 }
 
                 try {
                     const response = await fetch('/verify-venue', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ venueId }),
                     });
 
                     const data = await response.json();
 
                     if (data.success) {
+                        venueVerified = true;
                         successDiv.classList.remove('hidden');
                         document.getElementById('restaurantName').textContent = data.restaurantName;
                         document.getElementById('venueIdHidden').value = venueId;
-                        submitBtn.disabled = false;
                     } else {
-                        errorDiv.textContent = data.message;
-                        errorDiv.classList.remove('hidden');
-                        submitBtn.disabled = true;
+                        venueVerified = false;
+                        errorDiv1.textContent = data.message;
+                        errorDiv1.classList.remove('hidden');
                     }
                 } catch (error) {
-                    errorDiv.textContent = 'Error verifying Venue ID';
-                    errorDiv.classList.remove('hidden');
-                    submitBtn.disabled = true;
+                    errorDiv1.textContent = 'Error verifying Venue ID';
+                    errorDiv1.classList.remove('hidden');
                 }
             }
 
-            // Enter key support for venue ID input
+            // Enter key support
             document.getElementById('venueIdInput').addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') {
                     verifyVenueId();
                 }
             });
 
-            // Password confirmation validation
+            // Submit validation
             document.getElementById('employeeSignupForm').addEventListener('submit', function (e) {
+                const errorDiv2 = document.getElementById('errorMessage2');
+
+                // Venue ID 검증 안됨
+                if (!venueVerified) {
+                    e.preventDefault();
+
+                    errorDiv2.textContent = 'Please verify Venue ID before signing up';
+
+                    // 완전 초기화 + error 스타일 강제 적용
+                    errorDiv2.classList.remove('hidden');
+                    errorDiv2.classList.remove('success-message');
+                    errorDiv2.classList.add('error');
+
+                    return;
+                }
+
+                // Password match check
                 const password = document.querySelector('input[name="password"]').value;
                 const confirmPassword = document.querySelector('input[name="confirmPassword"]').value;
 
                 if (password !== confirmPassword) {
                     e.preventDefault();
-                    const errorDiv = document.getElementById('errorMessage');
-                    errorDiv.textContent = 'Passwords do not match';
-                    errorDiv.classList.remove('hidden');
+
+                    errorDiv2.textContent = 'Passwords do not match';
+
+                    errorDiv2.classList.remove('hidden');
+                    errorDiv2.classList.remove('success-message');
+                    errorDiv2.classList.add('error');
+
+                    return;
                 }
             });
+
+            // 실시간 비밀번호 체크
+            const passwordInput = document.querySelector('input[name="password"]');
+            const confirmPasswordInput = document.querySelector('input[name="confirmPassword"]');
+            const errorDiv2 = document.getElementById('errorMessage2');
+
+            function checkPasswordMatch() {
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+
+                // 아무것도 안 적었을 때는 숨김
+                if (password === '' || confirmPassword === '') {
+                    errorDiv2.classList.add('hidden');
+                    return;
+                }
+
+                // 불일치
+                if (password !== confirmPassword) {
+                    errorDiv2.textContent = 'Passwords do not match';
+                    errorDiv2.classList.remove('hidden');
+                    errorDiv2.classList.remove('success-message');
+                    errorDiv2.classList.add('error');
+                } else {
+                    // 일치
+                    errorDiv2.textContent = 'Passwords match!';
+                    errorDiv2.classList.remove('hidden');
+                    errorDiv2.classList.remove('error');
+                    errorDiv2.classList.add('success-message');
+                }
+            }
+
+            passwordInput.addEventListener('input', checkPasswordMatch);
+            confirmPasswordInput.addEventListener('input', checkPasswordMatch);
         </script>
     </body>
 </html>
