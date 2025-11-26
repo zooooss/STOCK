@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Create Item</title>
+        <style>
+            * {
+                box-sizing: border-box;
+                font-family: 'Inter', sans-serif;
+            }
+            body {
+                background: white;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding-bottom: 50px;
+            }
+
+            .container {
+                width: 100%;
+                max-width: 480px;
+                padding: 0 20px;
+            }
+
+            /* 상단 검정색 바 스타일 */
+            .info-bar {
+                width: 100%;
+                max-width: 480px;
+                background-color: #1a1b2e; /* 다크 네이비 */
+                color: white;
+                padding: 12px 20px;
+                font-weight: 600;
+                font-size: 14px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-radius: 8px;
+                margin-top: 10px;
+                margin-bottom: 20px;
+            }
+
+            /* 폼 스타일 */
+            .form-group {
+                margin-bottom: 20px;
+            }
+            .form-label {
+                display: block;
+                font-size: 11px;
+                font-weight: 800;
+                margin-bottom: 8px;
+                color: #111;
+                text-transform: uppercase;
+            }
+
+            .form-input {
+                width: 100%;
+                background: #f2f4f6; /* 연한 회색 배경 */
+                border: none;
+                padding: 15px;
+                border-radius: 8px;
+                font-size: 14px;
+                color: #333;
+                outline: none;
+            }
+            .form-input::placeholder {
+                color: #aaa;
+                font-weight: 500;
+            }
+
+            /* Select 박스 스타일 */
+            select.form-input {
+                appearance: none; /* 기본 화살표 제거 */
+                background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+                background-repeat: no-repeat;
+                background-position: right 15px center;
+                background-size: 12px;
+            }
+
+            /* 버튼 영역 */
+            .action-buttons {
+                margin-top: 30px;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .btn {
+                width: 100%;
+                padding: 16px;
+                border: none;
+                border-radius: 8px;
+                font-weight: 800;
+                font-size: 14px;
+                cursor: pointer;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            /* 버튼 색상별 클래스 */
+            .btn-navy {
+                background: #1a1b2e;
+                color: white;
+            } /* Add More */
+            .btn-grey {
+                background: #b0b0b0;
+                color: #111;
+                justify-content: space-between;
+                padding: 0 20px;
+                height: 50px;
+            } /* Save & Back */
+            .btn-red {
+                background: #a33030;
+                color: white;
+                justify-content: space-between;
+                padding: 0 20px;
+                height: 50px;
+                text-decoration: none;
+            } /* Cancel */
+
+            .arrow {
+                font-size: 18px;
+                font-weight: 400;
+            }
+        </style>
+    </head>
+    <body>
+        <%- include('header.ejs') %>
+
+        <div class="info-bar">
+            <span><%= itemCount %> ITEMS</span>
+            <span>▼</span>
+        </div>
+
+        <div class="container">
+            <form action="/orderlist/add" method="POST">
+                <div class="form-group">
+                    <label class="form-label">Item Name*</label>
+                    <input type="text" name="itemName" class="form-input" placeholder="ITEM NAME" required />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Supplier*</label>
+                    <input type="text" name="supplier" class="form-input" placeholder="SUPPLIER" required />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">SKU# If Available</label>
+                    <input type="text" name="sku" class="form-input" placeholder="SKU#" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Price If Available</label>
+                    <input type="number" step="0.01" name="price" class="form-input" placeholder="PRICE" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Pack Unit</label>
+                    <select name="unit" class="form-input">
+                        <option value="" disabled selected>KG, BOX, BOTTLE</option>
+                        <option value="KG">KG</option>
+                        <option value="LB">LB</option>
+                        <option value="BOX">BOX</option>
+                        <option value="BOTTLE">BOTTLE</option>
+                        <option value="PACK">PACK</option>
+                        <option value="BAG">BAG</option>
+                        <option value="WHOLE">WHOLE</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <input type="text" name="category" class="form-input" placeholder="KITCHEN, SUSHI, BAR, TAKEOUT" />
+                </div>
+
+                <div class="action-buttons">
+                    <button type="submit" name="action" value="addmore" class="btn btn-navy">ADD MORE +</button>
+
+                    <button type="submit" name="action" value="save" class="btn btn-grey">
+                        <span>SAVE & BACK</span>
+                        <span class="arrow">→</span>
+                    </button>
+
+                    <a href="/orderlist" class="btn btn-red">
+                        <span>CANCEL & BACK</span>
+                        <span class="arrow">→</span>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </body>
+</html>

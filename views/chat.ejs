@@ -17,42 +17,6 @@
                 flex-direction: column;
                 align-items: center;
             }
-
-            .header {
-                width: 100%;
-                max-width: 480px;
-                background: white;
-                padding: 20px 0;
-                text-align: center;
-            }
-
-            .header h1 {
-                font-size: 20px;
-                font-weight: 700;
-                margin: 0 0 10px;
-            }
-
-            .nav-buttons {
-                display: flex;
-                justify-content: center;
-                gap: 20px;
-            }
-
-            .nav-button {
-                border: none;
-                background: none;
-                font-weight: 600;
-                padding: 8px 20px;
-                border-radius: 20px;
-                cursor: pointer;
-                color: #111;
-            }
-
-            .nav-button.active {
-                background: #111;
-                color: white;
-            }
-
             .chat-container {
                 width: 100%;
                 max-width: 480px;
@@ -142,23 +106,22 @@
     </head>
     <body>
         <!-- Header -->
-        <header class="header">
-            <h1><%= result.restaurantName.toUpperCase() %></h1>
-            <div class="nav-buttons">
-                <button class="nav-button active">TEAM CHAT</button>
-                <button class="nav-button" onclick="location.href='/orderlist'">ORDERLIST</button>
-                <button class="nav-button">CART</button>
-            </div>
-        </header>
+        <%- include('header.ejs') %>
 
-        <!-- Chat section -->
+        <!-- Chat section 구조 이해(아래 함수를 통해 이곳에 메세지컨ㄴ테이너 계속 추가하는 방식) -->
         <section class="chat-container" id="chatContainer">
-            <% if (result.messages && result.messages.length > 0) { %> <% result.messages.forEach(function(msg) { %>
+            <% if (result.messages && result.messages.length > 0)
+            <!-- 메시지가 있으면 이 부분 실행 -->
+            { %> <% result.messages.forEach(function(msg) { %>
+            <!-- 2. forEach 반복문 -->
+            <!-- 3. 각 메시지마다 아래 HTML이 생성됨 -->
             <div class="chat-message <%= msg.senderId === currentUserId ? 'mine' : '' %>">
                 <div class="sender"><%= msg.senderName.toUpperCase() %></div>
                 <div class="bubble <%= msg.senderId === currentUserId ? 'me' : '' %>"><%= msg.text %></div>
             </div>
-            <% }); %> <% } else { %>
+            <% }); %>
+            <!-- 4. 아래 else는 메시지가 없으면 -->
+            <% } else { %>
             <p style="text-align: center; color: #999">No messages yet. Start the conversation!</p>
             <% } %>
         </section>

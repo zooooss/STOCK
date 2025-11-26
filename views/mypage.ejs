@@ -4,35 +4,52 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>My Page - Stock</title>
-        <link href="/main.css" rel="stylesheet" />
         <style>
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background-color: white;
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+                min-height: 100vh;
+            }
+
+            .container {
+                width: 100%;
+                max-width: 480px;
+                background-color: white;
+                padding: 20px;
+                box-sizing: border-box;
+            }
+
             .profile-section {
                 display: flex;
                 align-items: center;
                 background-color: white;
                 padding: 20px;
-                border-radius: 15px;
-                margin-bottom: 30px;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                border-radius: 12px;
+                margin-bottom: 20px;
+                border: 1px solid #e0e0e0;
             }
 
             .profile-image {
-                width: 80px;
-                height: 80px;
+                width: 60px;
+                height: 60px;
                 border-radius: 50%;
-                background-color: #bbb;
+                background-color: #1a1b2e;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                margin-right: 20px;
-                position: relative;
+                margin-right: 15px;
             }
 
             .profile-icon {
-                width: 50px;
-                height: 50px;
+                width: 30px;
+                height: 30px;
                 border-radius: 50%;
-                background-color: #888;
+                background-color: white;
             }
 
             .profile-info {
@@ -40,121 +57,119 @@
             }
 
             .profile-name {
-                font-size: 24px;
-                font-weight: bold;
-                color: #333;
+                font-size: 18px;
+                font-weight: 700;
+                color: #111;
                 margin: 0 0 5px 0;
+                letter-spacing: -0.3px;
             }
 
             .profile-company {
-                font-size: 18px;
+                font-size: 13px;
                 color: #666;
                 margin: 0;
+                font-weight: 500;
             }
 
             .role-badge {
                 display: inline-block;
-                padding: 4px 10px;
-                border-radius: 12px;
-                font-size: 12px;
-                font-weight: 600;
-                margin-left: 10px;
+                padding: 3px 8px;
+                border-radius: 10px;
+                font-size: 10px;
+                font-weight: 700;
+                margin-left: 8px;
             }
 
             .role-owner {
-                background-color: #ffd700;
-                color: #333;
+                background-color: #1a1b2e;
+                color: white;
             }
 
             .role-employee {
-                background-color: #e3f2fd;
-                color: #1976d2;
+                background-color: #e8e8e8;
+                color: #111;
             }
 
             .edit-profile-btn {
-                background-color: #e9ecef;
-                margin-left: 5px;
+                background-color: #f0f0f0;
                 border: none;
-                padding: 7px 14px;
+                padding: 8px 12px;
                 border-radius: 8px;
-                color: #333;
+                color: #111;
                 text-decoration: none;
-                font-size: 14px;
+                font-size: 12px;
+                font-weight: 600;
                 display: inline-block;
             }
 
-            .edit-profile-btn:hover {
-                background-color: #dee2e6;
-            }
-
             .section {
-                margin-bottom: 30px;
+                margin-bottom: 20px;
             }
 
             .section-title {
-                font-size: 18px;
-                font-weight: bold;
-                color: #333;
-                margin-bottom: 15px;
+                font-size: 13px;
+                font-weight: 700;
+                color: #111;
+                margin-bottom: 12px;
+                letter-spacing: -0.3px;
             }
 
             .owner-management {
-                background-color: #fff3cd;
-                border-radius: 15px;
+                background-color: white;
+                border-radius: 12px;
                 padding: 20px;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-                margin-bottom: 30px;
+                border: 1px solid #e0e0e0;
+                margin-bottom: 20px;
             }
 
             .owner-management-title {
-                font-size: 16px;
-                font-weight: bold;
-                color: #856404;
-                margin: 0 0 10px 0;
+                font-size: 14px;
+                font-weight: 700;
+                color: #111;
+                margin: 0 0 8px 0;
+                letter-spacing: -0.3px;
             }
 
             .pending-count {
                 display: inline-block;
-                background-color: #ff6b6b;
+                background-color: #c94e4e;
                 color: white;
-                font-size: 12px;
-                font-weight: bold;
-                padding: 2px 8px;
+                font-size: 10px;
+                font-weight: 700;
+                padding: 2px 6px;
                 border-radius: 10px;
-                margin-left: 8px;
+                margin-left: 6px;
             }
 
             .manage-employees-btn {
                 width: 100%;
-                background-color: #ffc107;
+                background-color: #1a1b2e;
                 border: none;
-                padding: 15px;
+                padding: 14px;
                 border-radius: 8px;
-                color: #333;
-                font-weight: 600;
+                color: white;
+                font-weight: 700;
                 text-decoration: none;
-                font-size: 16px;
-                display: block;
-                text-align: center;
-                margin-top: 10px;
-            }
-
-            .manage-employees-btn:hover {
-                background-color: #ffb300;
+                font-size: 13px;
+                display: block; /* ✅ flex 대신 block */
+                text-align: center; /* ✅ 추가 */
+                margin-top: 12px;
+                letter-spacing: -0.3px;
+                box-sizing: border-box; /* ✅ 추가 */
             }
 
             .history-section {
                 background-color: white;
-                border-radius: 15px;
+                border-radius: 12px;
                 padding: 20px;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                border: 1px solid #e0e0e0;
             }
 
             .history-item {
                 display: flex;
                 align-items: center;
                 padding: 12px 0;
-                border-bottom: 1px solid #eee;
+                border-bottom: 1px solid #f0f0f0;
             }
 
             .history-item:last-child {
@@ -162,21 +177,22 @@
             }
 
             .status-badge {
-                padding: 4px 12px;
-                border-radius: 15px;
-                font-size: 12px;
+                padding: 4px 10px;
+                border-radius: 10px;
+                font-size: 11px;
+                font-weight: 700;
                 color: white;
-                margin-right: 15px;
+                margin-right: 12px;
                 min-width: 70px;
                 text-align: center;
             }
 
             .status-pending {
-                background-color: #ffc107;
+                background-color: #c94e4e;
             }
 
             .status-approved {
-                background-color: #28a745;
+                background-color: #1a1b2e;
             }
 
             .history-content {
@@ -184,9 +200,11 @@
             }
 
             .history-item-name {
-                font-size: 16px;
-                color: #333;
-                margin: 0;
+                font-size: 14px;
+                font-weight: 600;
+                color: #111;
+                margin: 0 0 3px 0;
+                letter-spacing: -0.3px;
             }
 
             .history-date {
@@ -196,33 +214,32 @@
             }
 
             .view-all-btn {
-                width: 80%;
-                background-color: #e9ecef;
+                width: 100%;
+                background-color: #f0f0f0;
                 border: none;
-                padding: 15px;
+                padding: 12px;
                 border-radius: 8px;
-                color: #333;
+                color: #111;
                 text-decoration: none;
-                font-size: 16px;
-                margin-top: 15px;
-                display: block;
-                text-align: center;
-            }
-
-            .view-all-btn:hover {
-                background-color: #dee2e6;
+                font-size: 13px;
+                font-weight: 600;
+                margin-top: 12px;
+                display: block; /* ✅ flex 대신 block */
+                text-align: center; /* ✅ 추가 */
+                letter-spacing: -0.3px;
+                box-sizing: border-box; /* ✅ 추가 */
             }
 
             .settings-section {
                 background-color: white;
-                border-radius: 15px;
+                border-radius: 12px;
                 padding: 20px;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                border: 1px solid #e0e0e0;
             }
 
             .settings-item {
-                padding: 15px 0;
-                border-bottom: 1px solid #eee;
+                padding: 14px 0;
+                border-bottom: 1px solid #f0f0f0;
             }
 
             .settings-item:last-child {
@@ -230,17 +247,13 @@
             }
 
             .settings-link {
-                font-size: 16px;
-                color: #333;
+                font-size: 14px;
+                font-weight: 600;
+                color: #111;
                 text-decoration: none;
                 display: block;
                 margin: 0;
-            }
-
-            .settings-link:hover {
-                background-color: #f8f9fa;
-                margin: 0 -20px;
-                padding: 15px 20px;
+                letter-spacing: -0.3px;
             }
         </style>
     </head>
@@ -313,7 +326,5 @@
                 </div>
             </div>
         </div>
-
-        <%- include('navbar-bottom.ejs') %>
     </body>
 </html>

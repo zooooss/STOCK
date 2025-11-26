@@ -118,13 +118,14 @@ app.get('/chat', CheckLogIn, async (req, res) => {
                 };
             })
         );
-
         res.render('chat.ejs', {
             result: {
                 ...chatRoom,
                 messages: messagesWithNames,
             },
             currentUserId: req.user._id.toString(),
+            restaurantName: req.user.restaurantName,
+            activeTab: 'chat',
         });
     } catch (err) {
         console.error('채팅 페이지 로드 에러:', err);
@@ -306,7 +307,7 @@ app.post('/signup/owner', async (req, res) => {
 
         // 5. 레스토랑 정보 저장
         const restaurantResult = await db.collection('restaurants').insertOne({
-            name: restaurantName,
+            restaurantName: restaurantName,
             venueId: venueId,
             email: email,
             phoneNumber: phoneNumber,
@@ -323,7 +324,7 @@ app.post('/signup/owner', async (req, res) => {
             phoneNumber: phoneNumber,
             role: 'owner',
             restaurantId: restaurantResult.insertedId,
-            name: restaurantName,
+            restaurantName: restaurantName,
             venueId: venueId,
             status: 'active',
             createdAt: new Date(),
@@ -365,7 +366,7 @@ app.post('/verify-venue', async (req, res) => {
 
         res.json({
             success: true,
-            restaurantName: restaurant.name,
+            restaurantName: restaurant.restaurantName,
             restaurantId: restaurant._id,
         });
     } catch (err) {
@@ -416,7 +417,7 @@ app.post('/signup/employee', async (req, res) => {
             phoneNumber: phoneNumber,
             role: 'employee',
             restaurantId: restaurant._id,
-            restaurantName: restaurant.name,
+            restaurantName: restaurant.restaurantName,
             venueId: venueId,
             status: 'pending', // 오너 승인 대기
             createdAt: new Date(),
@@ -439,7 +440,7 @@ app.post('/signup/employee', async (req, res) => {
             });
         }
 
-        res.render('signup-pending.ejs', { restaurantName: restaurant.name });
+        res.render('signup-pending.ejs', { restaurantName: restaurant.restaurantName });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server error');
@@ -574,13 +575,77 @@ app.get('/mypage', CheckLogIn, async (req, res) => {
         res.status(500).send('서버 에러');
     }
 });
+// 1. 오더리스트 목록 페이지
+app.get('/orderlist', CheckLogIn, async (req, res) => {
+    try {
+        console.log('req.user:', req.user); // ✅ 이 로그 추가
+        console.log('restaurantName:', req.user.restaurantName); // ✅ 이 로그 추가
 
-app.get('/orderlist', async (req, res) => {
-    let suppliers = await db.collection('supplier').find().toArray();
-    res.render('orderlist.ejs', {
-        suppliers: suppliers,
-        currentPath: req.path,
-    });
+        const items = await db.collection('orderlist').find({ restaurantId: req.user.restaurantId }).toArray();
+
+        res.render('orderlist.ejs', {
+            items: items,
+            result: {
+                restaurantName: req.user.restaurantName,
+            },
+            activeTab: 'orderlist',
+        });
+    } catch (e) {
+        console.log(e);
+        res.status(500).send('서버 에러');
+    }
+});
+
+// 2. [추가] 아이템 생성 페이지 (GET)
+app.get('/orderlist/create', CheckLogIn, async (req, res) => {
+    try {
+        // 현재 아이템 개수를 헤더에 표시하기 위해 조회
+        const count = await db.collection('orderlist').countDocuments({ restaurantId: req.user.restaurantId });
+
+        res.render('createItem.ejs', {
+            result: {
+                restaurantName: req.user.restaurantName,
+            },
+            activeTab: 'orderlist',
+            itemCount: count,
+        });
+    } catch (e) {
+        console.log(e);
+        res.status(500).send('서버 에러');
+    }
+});
+
+// 3. 아이템 저장 처리 (POST)
+app.post('/orderlist/add', CheckLogIn, async (req, res) => {
+    try {
+        // 어떤 버튼을 눌렀는지 확인 (action 값)
+        const action = req.body.action;
+
+        const newItem = {
+            restaurantId: req.user.restaurantId,
+            itemName: req.body.itemName,
+            supplier: req.body.supplier,
+            sku: req.body.sku,
+            price: req.body.price,
+            unit: req.body.unit,
+            category: req.body.category,
+            cartQuantity: 0,
+            createdAt: new Date(),
+        };
+
+        await db.collection('orderlist').insertOne(newItem);
+
+        if (action === 'addmore') {
+            // ADD MORE 버튼을 눌렀으면 -> 다시 생성 페이지로 리다이렉트
+            res.redirect('/orderlist/create');
+        } else {
+            // SAVE & BACK 버튼을 눌렀으면 -> 목록 페이지로 이동
+            res.redirect('/orderlist');
+        }
+    } catch (e) {
+        console.log(e);
+        res.status(500).send('아이템 저장 실패');
+    }
 });
 
 io.engine.use(sessionMiddleware);
