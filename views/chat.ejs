@@ -2,36 +2,45 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Team Chat</title>
-        <style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+            <link rel="stylesheet" href="/main.css" />   
+    <title>Team Chat</title>
+              <style>
             * {
                 box-sizing: border-box;
                 font-family: 'Inter', sans-serif;
             }
 
+            /* ✅ orderlist와 동일하게 */
+            html, body {
+                height: 100%;
+                margin: 0;
+                overflow: hidden;
+            }
+
             body {
                 background: white;
-                margin: 0;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
             }
+
+            /* ✅ 채팅 컨테이너 - orderlist의 .container와 동일 */
             .chat-container {
+                flex: 1;
                 width: 100%;
                 max-width: 480px;
-                background: white;
-                display: flex;
-                flex-direction: column;
-                padding: 20px;
-                min-height: 75vh;
+                padding: 0 20px; /* ✅ orderlist와 동일 */
+                padding-top: 20px; /* ✅ orderlist의 margin-top과 동일 */
                 overflow-y: auto;
+                overflow-x: hidden;
             }
 
             .chat-message {
                 display: flex;
                 flex-direction: column;
                 margin-bottom: 20px;
+                flex-shrink: 0;
             }
 
             .chat-message.mine {
@@ -68,11 +77,13 @@
                 color: white;
             }
 
+            /* ✅ 입력창 - 하단 고정 */
             .chat-input-container {
+                flex-shrink: 0;
                 width: 100%;
                 max-width: 480px;
                 display: flex;
-                padding: 10px 20px 30px;
+                padding: 10px 20px 20px; /* ✅ orderlist와 동일 */
                 background: white;
                 border-top: 1px solid #ccc;
             }
@@ -83,8 +94,12 @@
                 border-radius: 20px;
                 border: 2px solid #ccc;
                 outline: none;
-                resize: vertical; /* 사용자가 크기 조절 가능 */
+                resize: none;
                 min-height: 44px;
+                max-height: 120px;
+                overflow-y: auto;
+                font-family: 'Inter', sans-serif;
+                font-size: 14px;
             }
 
             .send-button {
@@ -96,11 +111,19 @@
                 font-weight: 600;
                 color: #666;
                 cursor: pointer;
+                height: 44px;
+                flex-shrink: 0;
             }
 
             .send-button.active {
                 background: #111;
                 color: white;
+            }
+
+            @supports (padding: env(safe-area-inset-bottom)) {
+                .chat-input-container {
+                    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+                }
             }
         </style>
     </head>
@@ -117,7 +140,7 @@
             <!-- 3. 각 메시지마다 아래 HTML이 생성됨 -->
             <div class="chat-message <%= msg.senderId === currentUserId ? 'mine' : '' %>">
                 <div class="sender"><%= msg.senderName.toUpperCase() %></div>
-                <div class="bubble <%= msg.senderId === currentUserId ? 'me' : '' %>"><%= msg.text %></div>
+                <div class="bubble <%= msg.senderId === currentUserId ? 'me' : '' %>"><%= msg.content || msg.text %></div>
             </div>
             <% }); %>
             <!-- 4. 아래 else는 메시지가 없으면 -->
@@ -134,87 +157,107 @@
 
         <!-- Socket.IO -->
         <script src="https://cdn.jsdelivr.net/npm/socket.io@4.7.2/client-dist/socket.io.min.js"></script>
-        <script>
-            const socket = io();
+<script>
+    const socket = io();
 
-            const input = document.getElementById('messageInput');
-            const sendBtn = document.getElementById('sendBtn');
-            const chatContainer = document.getElementById('chatContainer');
-            const currentUserId = '<%= currentUserId %>';
+    const input = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatContainer = document.getElementById('chatContainer');
+    const currentUserId = '<%= currentUserId %>';
 
-            // HTML escape 함수
-            function escapeHtml(unsafe) {
-                return unsafe
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#039;');
-            }
+    // 자동 스크롤 함수
+    function scrollToBottom(smooth = true) {
+        chatContainer.scrollTo({
+            top: chatContainer.scrollHeight,
+            behavior: smooth ? 'smooth' : 'auto'
+        });
+    }
 
-            // 소켓 연결 시 방 참여
-            socket.on('connect', () => {
-                console.log('✅ Socket connected!');
-                socket.emit('ask-join');
-            });
+    // HTML escape 함수
+    function escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
 
-            // 방 참여 성공
-            socket.on('joined-room', (roomId) => {
-                console.log('✅ Joined room:', roomId);
-            });
+    // 소켓 연결 시 방 참여
+    socket.on('connect', () => {
+        console.log('Socket connected!');
+        socket.emit('ask-join');
+    });
 
-            // 메시지 전송
-            function sendMessage() {
-                const text = input.value.trim();
-                if (!text) return;
+    // 방 참여 성공
+    socket.on('joined-room', (roomId) => {
+        console.log('Joined room:', roomId);
+    });
 
-                // 서버로 메시지 전송만 하고, UI 추가는 서버 응답 받은 후에!
-                socket.emit('send-message', { text });
-                input.value = '';
-                sendBtn.classList.remove('active');
-            }
+    // 메시지 전송
+    function sendMessage() {
+        const text = input.value.trim();
+        if (!text) return;
 
-            sendBtn.addEventListener('click', sendMessage);
+        socket.emit('send-message', { text });
+        input.value = '';
+        sendBtn.classList.remove('active');
+    }
 
-            // 입력 시 버튼 활성화
-            input.addEventListener('input', () => {
-                if (input.value.trim()) {
-                    sendBtn.classList.add('active');
-                } else {
-                    sendBtn.classList.remove('active');
-                }
-            });
-            // 메시지 UI에 추가
-            function addMessageToUI(msg, isMine) {
-                const wrap = document.createElement('div');
-                wrap.className = 'chat-message' + (isMine ? ' mine' : '');
+    sendBtn.addEventListener('click', sendMessage);
 
-                const senderDiv = document.createElement('div');
-                senderDiv.className = 'sender';
-                senderDiv.textContent = msg.senderName.toUpperCase();
+    // 입력 시 버튼 활성화
+    input.addEventListener('input', () => {
+        if (input.value.trim()) {
+            sendBtn.classList.add('active');
+        } else {
+            sendBtn.classList.remove('active');
+        }
+    });
 
-                const bubble = document.createElement('div');
-                bubble.className = 'bubble' + (isMine ? ' me' : '');
-                bubble.innerHTML = escapeHtml(msg.text).replace(/\n/g, '<br/>');
+    // 메시지 UI에 추가
+    function addMessageToUI(msg, isMine) {
+        const wrap = document.createElement('div');
+        wrap.className = 'chat-message' + (isMine ? ' mine' : '');
 
-                wrap.appendChild(senderDiv);
-                wrap.appendChild(bubble);
-                chatContainer.appendChild(wrap);
+        const senderDiv = document.createElement('div');
+        senderDiv.className = 'sender';
+        senderDiv.textContent = msg.senderName.toUpperCase();
 
-                // 스크롤 맨 아래로
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            }
-            // 새 메시지 수신
-            socket.on('new-message', (msg) => {
-                console.log('📨 New message:', msg);
-                const isMine = msg.senderId === currentUserId;
-                addMessageToUI(msg, isMine);
-            });
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble' + (isMine ? ' me' : '');
+        const messageText = msg.content || msg.text || '';
+        bubble.innerHTML = escapeHtml(messageText).replace(/\n/g, '<br/>');
 
-            // 페이지 로드 시 스크롤 맨 아래로
-            window.addEventListener('load', () => {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            });
-        </script>
+        wrap.appendChild(senderDiv);
+        wrap.appendChild(bubble);
+        chatContainer.appendChild(wrap);
+
+        // 자동 스크롤
+        scrollToBottom();
+    }
+
+    // 새 메시지 수신
+    socket.on('new-message', (msg) => {
+        console.log('📨 New message:', msg);
+        const isMine = msg.senderId === currentUserId;
+        addMessageToUI(msg, isMine);
+    });
+
+    // 페이지 로드 시 스크롤 맨 아래로
+    window.addEventListener('load', () => {
+        scrollToBottom(false); // 즉시 이동 (부드러운 효과 없이)
+    });
+
+    // 채팅 컨테이너 변화 감지 (orderlist 메시지 등)
+    const observer = new MutationObserver(() => {
+        scrollToBottom();
+    });
+
+    observer.observe(chatContainer, {
+        childList: true,
+        subtree: true
+    });
+</script>
     </body>
 </html>

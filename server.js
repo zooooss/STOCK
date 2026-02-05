@@ -98,6 +98,10 @@ app.get('/', (req, res) => {
 // app.use(CheckLogIn); 이 코드 사용시 아래에 있는 모든 api의 요청과 응답 사이에 미드웨어 실행! 보통 서버코드 가장 위에 적용시켜줌!
 app.get('/chat', CheckLogIn, async (req, res) => {
     try {
+        const orderCount = await db.collection('orderlist').countDocuments({
+            restaurantId: req.user.restaurantId,
+        });
+
         // 현재 유저가 member로 포함된 채팅방 찾기
         let chatRoom = await db.collection('chat').findOne({
             member: req.user._id,
@@ -107,17 +111,33 @@ app.get('/chat', CheckLogIn, async (req, res) => {
             return res.status(404).send('채팅방을 찾을 수 없습니다.');
         }
 
+        // ✅ messages 배열이 없으면 빈 배열로 초기화
+        if (!chatRoom.messages) {
+            chatRoom.messages = [];
+        }
+
         // 메시지에 사용자 이름 추가
         const messagesWithNames = await Promise.all(
             chatRoom.messages.map(async (msg) => {
-                const user = await db.collection('user').findOne({ _id: new ObjectId(msg.sender) });
-                return {
-                    ...msg,
-                    senderName: user ? user.firstName : 'Unknown',
-                    senderId: msg.sender.toString(),
-                };
-            })
+                try {
+                    const senderId = typeof msg.sender === 'string' ? new ObjectId(msg.sender) : msg.sender;
+                    const user = await db.collection('user').findOne({ _id: senderId });
+                    return {
+                        ...msg,
+                        senderName: user ? user.firstName : 'Unknown',
+                        senderId: senderId.toString(),
+                    };
+                } catch (err) {
+                    console.error('Error processing message:', err);
+                    return {
+                        ...msg,
+                        senderName: 'Unknown',
+                        senderId: msg.sender?.toString() || 'unknown',
+                    };
+                }
+            }),
         );
+
         res.render('chat.ejs', {
             result: {
                 ...chatRoom,
@@ -126,6 +146,7 @@ app.get('/chat', CheckLogIn, async (req, res) => {
             currentUserId: req.user._id.toString(),
             restaurantName: req.user.restaurantName,
             activeTab: 'chat',
+            orderCount: orderCount,
         });
     } catch (err) {
         console.error('채팅 페이지 로드 에러:', err);
@@ -231,7 +252,7 @@ passport.use(
         } else {
             return cb(null, false, { message: '비번불일치' });
         }
-    })
+    }),
 );
 
 //아래 코드는 req.logIn()할 때 마다 실행, 로그인시 session document 발행
@@ -462,7 +483,7 @@ app.post('/approve-employee/:email', async (req, res) => {
             .collection('user')
             .updateOne(
                 { email: employeeEmail, restaurantId: req.user.restaurantId },
-                { $set: { status: 'active', approvedAt: new Date() } }
+                { $set: { status: 'active', approvedAt: new Date() } },
             );
 
         // 업데이트 후 다시 직원 정보 가져오기
@@ -548,7 +569,7 @@ passport.use(
         } else {
             return done(null, false, { message: 'Invalid email or password' });
         }
-    })
+    }),
 );
 
 app.get('/mypage', CheckLogIn, async (req, res) => {
@@ -578,8 +599,8 @@ app.get('/mypage', CheckLogIn, async (req, res) => {
 // 1. 오더리스트 목록 페이지
 app.get('/orderlist', CheckLogIn, async (req, res) => {
     try {
-        console.log('req.user:', req.user); // ✅ 이 로그 추가
-        console.log('restaurantName:', req.user.restaurantName); // ✅ 이 로그 추가
+        console.log('req.user:', req.user);
+        console.log('restaurantName:', req.user.restaurantName);
 
         const items = await db.collection('orderlist').find({ restaurantId: req.user.restaurantId }).toArray();
 
@@ -589,6 +610,7 @@ app.get('/orderlist', CheckLogIn, async (req, res) => {
                 restaurantName: req.user.restaurantName,
             },
             activeTab: 'orderlist',
+            orderCount: items.length,
         });
     } catch (e) {
         console.log(e);
@@ -600,14 +622,15 @@ app.get('/orderlist', CheckLogIn, async (req, res) => {
 app.get('/orderlist/create', CheckLogIn, async (req, res) => {
     try {
         // 현재 아이템 개수를 헤더에 표시하기 위해 조회
-        const count = await db.collection('orderlist').countDocuments({ restaurantId: req.user.restaurantId });
-
+        const orderCount = await db.collection('orderlist').countDocuments({
+            restaurantId: req.user.restaurantId,
+        });
         res.render('createItem.ejs', {
             result: {
                 restaurantName: req.user.restaurantName,
             },
             activeTab: 'orderlist',
-            itemCount: count,
+            orderCount: orderCount,
         });
     } catch (e) {
         console.log(e);
@@ -630,6 +653,7 @@ app.post('/orderlist/add', CheckLogIn, async (req, res) => {
             unit: req.body.unit,
             category: req.body.category,
             cartQuantity: 0,
+            chatMentioned: false,
             createdAt: new Date(),
         };
 
@@ -645,6 +669,65 @@ app.post('/orderlist/add', CheckLogIn, async (req, res) => {
     } catch (e) {
         console.log(e);
         res.status(500).send('아이템 저장 실패');
+    }
+});
+// 수량 업데이트 API
+app.post('/orderlist/update-quantity', CheckLogIn, async (req, res) => {
+    try {
+        const { itemId, change } = req.body;
+
+        await db
+            .collection('orderlist')
+            .updateOne(
+                { _id: new ObjectId(itemId), restaurantId: req.user.restaurantId },
+                { $inc: { cartQuantity: change } },
+            );
+
+        res.json({ success: true });
+    } catch (e) {
+        console.log(e);
+        res.json({ success: false });
+    }
+});
+
+// 채팅으로 아이템 전송 API
+app.post('/orderlist/send-to-chat', CheckLogIn, async (req, res) => {
+    try {
+        const { itemId, itemName } = req.body;
+
+        // 1. chatMentioned 상태 업데이트
+        await db
+            .collection('orderlist')
+            .updateOne(
+                { _id: new ObjectId(itemId), restaurantId: req.user.restaurantId },
+                { $set: { chatMentioned: true } },
+            );
+
+        // 2. 채팅방 찾기
+        const chatRoom = await db.collection('chat').findOne({
+            member: req.user._id,
+        });
+
+        if (chatRoom) {
+            // 3. 새 메시지 객체 생성
+            const newMessage = {
+                sender: req.user._id.toString(), // ✅ ObjectId를 문자열로 변환
+                content: `Check this item! - ${itemName}`,
+                timestamp: new Date(),
+            };
+
+            // 4. 채팅방에 메시지 추가
+            await db.collection('chat').updateOne({ _id: chatRoom._id }, { $push: { messages: newMessage } });
+
+            console.log('Message added:', newMessage); // 디버깅용
+        } else {
+            console.log('Chat room not found for user:', req.user._id);
+        }
+
+        res.json({ success: true });
+    } catch (e) {
+        console.log('Send to chat error:', e);
+        res.json({ success: false, error: e.message });
     }
 });
 

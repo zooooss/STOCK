@@ -1,0 +1,16 @@
+* {
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    margin: 0;
+    background: white;
+}
+
+/* 모바일 뷰포트 대응 */
+@supports (padding: max(0px)) {
+    body {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}

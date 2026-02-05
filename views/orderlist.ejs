@@ -2,7 +2,8 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <link rel="stylesheet" href="/main.css" />
         <title>Order List</title>
         <style>
             * {
@@ -18,30 +19,20 @@
                 padding-bottom: 50px;
             }
 
-            /* 헤더 스타일은 include로 해결했으므로 삭제 */
-
-            /* 메인 컨테이너 */
             .container {
                 width: 100%;
                 max-width: 480px;
                 padding: 0 20px;
             }
 
-            /* 필터 및 아이템 생성 버튼 영역 */
             .control-bar {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 margin-top: 20px;
-                margin-bottom: 10px;
-                padding-bottom: 10px;
-                border-bottom: 2px solid #111;
+                margin-bottom: 15px;
             }
-            .item-count {
-                color: #999;
-                font-size: 14px;
-                font-weight: 400;
-            }
+
             .btn-group {
                 display: flex;
                 gap: 10px;
@@ -50,10 +41,10 @@
                 background: white;
                 border: 2px solid #ccc;
                 border-radius: 20px;
-                padding: 5px 15px;
+                padding: 8px 16px;
                 font-size: 12px;
                 font-weight: 700;
-                color: #999;
+                color: #666;
                 cursor: pointer;
             }
             .btn-create {
@@ -61,118 +52,97 @@
                 color: white;
                 border: none;
                 border-radius: 20px;
-                padding: 5px 15px;
+                padding: 8px 16px;
                 font-size: 12px;
                 font-weight: 700;
                 cursor: pointer;
             }
 
-            /* 아이템 리스트 스타일 (기존 유지) */
             .item-card {
-                margin-bottom: 25px;
+                margin-bottom: 15px;
             }
+            
             .item-title {
-                font-size: 14px;
+                font-size: 13px;
                 font-weight: 800;
                 margin-bottom: 8px;
                 text-transform: uppercase;
+                letter-spacing: 0.5px;
             }
-            .item-main-row {
+            
+            .item-row {
                 display: flex;
-                gap: 5px;
-                height: 80px;
-                margin-bottom: 5px;
-            }
-
-            .box {
-                border: 1px solid #ccc;
-                display: flex;
+                gap: 8px;
                 align-items: center;
-                justify-content: center;
-                font-size: 10px;
-                color: #aaa;
-                text-align: center;
             }
-            .box-img {
-                width: 20%;
-                flex-direction: column;
-            }
-            .box-note {
-                width: 35%;
-            }
-
-            .btn-add-action {
-                width: 25%;
-                border: none;
-                cursor: pointer;
-                color: white;
-                font-weight: 700;
-                font-size: 12px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                line-height: 1.2;
-            }
-            .btn-green {
-                background-color: #56a040;
-                border: 2px solid #3d7a2b;
-            }
-            .btn-dark {
-                background-color: #1a1b2e;
-                border: 2px solid #000;
-            }
-
-            .cart-count-box {
-                width: 20%;
-                background-color: #b88686;
-                border-radius: 8px;
-                border: 2px solid #a36666;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                color: white;
-            }
-            .cart-num {
-                font-size: 24px;
-                font-weight: 700;
-            }
-            .cart-label {
-                font-size: 10px;
-                font-weight: 600;
-            }
-
-            .item-info-row {
-                display: flex;
-                gap: 5px;
-                height: 25px;
-            }
-            .info-brand {
-                width: 20%;
+            
+            .unit-dropdown {
                 background: #111;
                 color: white;
-                font-size: 10px;
-                font-weight: 700;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 2px;
-            }
-            .info-box {
-                border: 2px solid #111;
-                background: white;
+                border: none;
+                padding: 10px 12px;
                 font-size: 11px;
                 font-weight: 700;
+                cursor: pointer;
+                border-radius: 4px;
+                min-width: 80px;
+            }
+            
+            .price-box {
+                flex: 1;
+                background: #e8e8e8;
+                padding: 10px;
+                font-size: 12px;
+                font-weight: 700;
+                text-align: center;
+                border-radius: 4px;
+            }
+            
+            .chat-badge {
+                padding: 10px 16px;
+                font-size: 11px;
+                font-weight: 700;
+                border-radius: 4px;
+                white-space: nowrap;
+                cursor: pointer;
+                border: none;
+            }
+            
+            .chat-badge.inactive {
+                background: #999;
+                color: white;
+            }
+            
+            .chat-badge.active {
+                background: #d93636;
+                color: white;
+            }
+            
+            .quantity-control {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .qty-btn {
+                width: 28px;
+                height: 28px;
+                border: 2px solid #111;
+                background: white;
+                font-size: 16px;
+                font-weight: 700;
+                cursor: pointer;
+                border-radius: 4px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
             }
-            .info-price {
-                width: 20%;
-            }
-            .info-unit {
-                width: 20%;
+            
+            .qty-display {
+                min-width: 30px;
+                text-align: center;
+                font-size: 14px;
+                font-weight: 700;
             }
         </style>
     </head>
@@ -181,7 +151,6 @@
 
         <div class="container">
             <div class="control-bar">
-                <span class="item-count"><%= items.length %> ITEMS LIST</span>
                 <div class="btn-group">
                     <button class="btn-filter">FILTER ▼</button>
                     <button class="btn-create" onclick="location.href='/orderlist/create'">CREATE ITEM +</button>
@@ -189,35 +158,132 @@
             </div>
 
             <div class="item-list">
-                <% if (items.length > 0) { %> <% items.forEach(function(item) { %>
-                <div class="item-card">
-                    <div class="item-title"><%= item.itemName %></div>
-                    <div class="item-main-row">
-                        <div class="box box-img">ADD<br />PICTURE</div>
-                        <div class="box box-note">ADD NOTES</div>
-
-                        <% if (Math.random() > 0.5) { %>
-                        <button class="btn-add-action btn-green">CHAT<br />ADD +</button>
-                        <% } else { %>
-                        <button class="btn-add-action btn-dark">ADD +</button>
-                        <% } %>
-
-                        <div class="cart-count-box">
-                            <span class="cart-num"><%= item.cartQuantity || 0 %></span>
-                            <span class="cart-label">IN CART</span>
+                <% if (items.length > 0) { %> 
+                    <% items.forEach(function(item) { %>
+                    <div class="item-card">
+                        <div class="item-title"><%= item.itemName %></div>
+                        <div class="item-row">
+                            <button class="unit-dropdown">UNIT ▼</button>
+                            <div class="price-box">$<%= item.price %> / LB</div>
+                            
+                            <button 
+                                class="chat-badge <%= item.chatMentioned ? 'active' : 'inactive' %>"
+                                onclick="sendToChat('<%= item._id %>', '<%= item.itemName %>')">
+                                <%= item.chatMentioned ? 'CHAT MENTIONED' : 'SEND TO CHAT' %>
+                            </button>
+                            
+                            <div class="quantity-control">
+                                <button class="qty-btn" onclick="updateQuantity('<%= item._id %>', -1)">−</button>
+                                <span class="qty-display"><%= item.cartQuantity || 0 %></span>
+                                <button class="qty-btn" onclick="updateQuantity('<%= item._id %>', 1)">+</button>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="item-info-row">
-                        <div class="info-brand">BRAND ▼</div>
-                        <div class="info-box info-price">$<%= item.price %> / LB</div>
-                        <div class="info-box info-unit"><%= item.unit %></div>
-                    </div>
-                </div>
-                <% }); %> <% } else { %>
-                <p style="text-align: center; color: #999; margin-top: 50px">No items yet.</p>
+                    <% }); %> 
+                <% } else { %>
+                    <p style="text-align: center; color: #999; margin-top: 50px">No items yet.</p>
                 <% } %>
             </div>
         </div>
+
+        <script>
+    function updateQuantity(itemId, change) {
+        const qtyDisplay = event.target.parentElement.querySelector('.qty-display');
+        const currentQty = parseInt(qtyDisplay.textContent);
+        const newQty = currentQty + change;
+        
+        // 0 미만으로 내려가지 않도록
+        if (newQty < 0) return;
+        
+        // 화면에 즉시 반영
+        qtyDisplay.textContent = newQty;
+        
+        // 백그라운드에서 서버 업데이트
+        fetch('/orderlist/update-quantity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ itemId, change })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                // 실패 시 원래 값으로 복구
+                qtyDisplay.textContent = currentQty;
+                alert('Failed to update quantity');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            // 에러 시 원래 값으로 복구
+            qtyDisplay.textContent = currentQty;
+        });
+    }
+
+            // 채팅으로 전송
+            function sendToChat(itemId, itemName) {
+                const button = event.target;
+                fetch('/orderlist/send-to-chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ itemId, itemName })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                                        // 버튼 상태만 변경 (새로고침 없이)
+                button.classList.remove('inactive');
+                button.classList.add('active');
+                button.textContent = 'CHAT MENTIONED';
+
+                // 간단한 알림
+                const notification = document.createElement('div');
+                notification.textContent = 'Sent to team chat!';
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #4CAF50;
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    font-weight: 700;
+                    z-index: 1000;
+                    animation: slideIn 0.3s ease-out;
+                `;
+                document.body.appendChild(notification);
+                
+                // 2초 후 알림 제거
+                setTimeout(() => {
+                    notification.style.animation = 'slideOut 0.3s ease-out';
+                    setTimeout(() => notification.remove(), 300);
+                }, 2000);
+                    }
+                })
+                .catch(err => console.error(err));
+            }
+        </script>
+        <style>
+    @keyframes slideIn {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+    }
+</style>
     </body>
 </html>

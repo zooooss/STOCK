@@ -2,7 +2,8 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+        <link rel="stylesheet" href="/main.css" />
         <title>Create Item</title>
         <style>
             * {
@@ -24,11 +25,10 @@
                 padding: 0 20px;
             }
 
-            /* 상단 검정색 바 스타일 */
             .info-bar {
                 width: 100%;
                 max-width: 480px;
-                background-color: #1a1b2e; /* 다크 네이비 */
+                background-color: #1a1b2e;
                 color: white;
                 padding: 12px 20px;
                 font-weight: 600;
@@ -41,7 +41,6 @@
                 margin-bottom: 20px;
             }
 
-            /* 폼 스타일 */
             .form-group {
                 margin-bottom: 20px;
             }
@@ -56,7 +55,7 @@
 
             .form-input {
                 width: 100%;
-                background: #f2f4f6; /* 연한 회색 배경 */
+                background: #f2f4f6;
                 border: none;
                 padding: 15px;
                 border-radius: 8px;
@@ -69,16 +68,14 @@
                 font-weight: 500;
             }
 
-            /* Select 박스 스타일 */
             select.form-input {
-                appearance: none; /* 기본 화살표 제거 */
+                appearance: none;
                 background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
                 background-repeat: no-repeat;
                 background-position: right 15px center;
                 background-size: 12px;
             }
 
-            /* 버튼 영역 */
             .action-buttons {
                 margin-top: 30px;
                 display: flex;
@@ -99,30 +96,104 @@
                 align-items: center;
             }
 
-            /* 버튼 색상별 클래스 */
             .btn-navy {
                 background: #1a1b2e;
                 color: white;
-            } /* Add More */
+            }
             .btn-grey {
                 background: #b0b0b0;
                 color: #111;
-                justify-content: space-between;
+                justify-content: center;
                 padding: 0 20px;
                 height: 50px;
-            } /* Save & Back */
+            }
             .btn-red {
                 background: #a33030;
                 color: white;
-                justify-content: space-between;
+                justify-content: center;
                 padding: 0 20px;
                 height: 50px;
                 text-decoration: none;
-            } /* Cancel */
+            }
 
             .arrow {
                 font-size: 18px;
                 font-weight: 400;
+            }
+
+            /* ✅ 팝업 모달 스타일 */
+            .modal-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 1000;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .modal-overlay.active {
+                display: flex;
+            }
+
+            .modal-content {
+                background: white;
+                border-radius: 16px;
+                width: 90%;
+                max-width: 400px;
+                padding: 30px 20px;
+                position: relative;
+            }
+
+            .modal-close {
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                background: none;
+                border: none;
+                font-size: 24px;
+                font-weight: 700;
+                cursor: pointer;
+                color: #333;
+            }
+
+            .modal-title {
+                text-align: center;
+                font-size: 18px;
+                font-weight: 800;
+                margin-bottom: 30px;
+                color: #111;
+            }
+
+            .modal-buttons {
+                display: flex;
+                gap: 10px;
+            }
+
+            .modal-btn {
+                flex: 1;
+                background: #1a1b2e;
+                color: white;
+                border: none;
+                padding: 40px 20px;
+                border-radius: 12px;
+                font-weight: 700;
+                font-size: 13px;
+                cursor: pointer;
+                text-align: center;
+                line-height: 1.4;
+            }
+
+            .modal-btn:hover {
+                background: #2a2b3e;
+            }
+
+            /* ✅ 숨겨진 파일 입력 */
+            .hidden-file-input {
+                display: none;
             }
         </style>
     </head>
@@ -130,12 +201,12 @@
         <%- include('header.ejs') %>
 
         <div class="info-bar">
-            <span><%= itemCount %> ITEMS</span>
+            <span><%= orderCount %> ITEMS</span>
             <span>▼</span>
         </div>
 
         <div class="container">
-            <form action="/orderlist/add" method="POST">
+            <form action="/orderlist/add" method="POST" enctype="multipart/form-data">
                 <div class="form-group">
                     <label class="form-label">Item Name*</label>
                     <input type="text" name="itemName" class="form-input" placeholder="ITEM NAME" required />
@@ -175,7 +246,21 @@
                     <input type="text" name="category" class="form-input" placeholder="KITCHEN, SUSHI, BAR, TAKEOUT" />
                 </div>
 
+                <!-- ✅ 숨겨진 파일 입력 -->
+                <input type="file" id="galleryInput" name="itemImage" accept="image/*" class="hidden-file-input" />
+                <input
+                    type="file"
+                    id="cameraInput"
+                    name="itemImage"
+                    accept="image/*"
+                    capture="environment"
+                    class="hidden-file-input"
+                />
+
                 <div class="action-buttons">
+                    <!-- ✅ ADD IMAGE 버튼 - 다른 버튼들과 동일한 스타일 -->
+                    <button type="button" class="btn btn-navy" onclick="openImageModal()">ADD IMAGE +</button>
+
                     <button type="submit" name="action" value="addmore" class="btn btn-navy">ADD MORE +</button>
 
                     <button type="submit" name="action" value="save" class="btn btn-grey">
@@ -190,5 +275,50 @@
                 </div>
             </form>
         </div>
+
+        <!-- ✅ 이미지 선택 모달 -->
+        <div class="modal-overlay" id="imageModal">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeImageModal()">✕</button>
+                <div class="modal-title">ADD IMAGE</div>
+                <div class="modal-buttons">
+                    <button type="button" class="modal-btn" onclick="selectFromGallery()">ADD FROM<br />GALLERY</button>
+                    <button type="button" class="modal-btn" onclick="takePhoto()">TAKE A<br />PHOTO</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function openImageModal() {
+                document.getElementById('imageModal').classList.add('active');
+            }
+
+            function closeImageModal() {
+                document.getElementById('imageModal').classList.remove('active');
+            }
+
+            function selectFromGallery() {
+                document.getElementById('galleryInput').click();
+                closeImageModal();
+            }
+
+            function takePhoto() {
+                document.getElementById('cameraInput').click();
+                closeImageModal();
+            }
+
+            // 파일 선택 시 미리보기 (선택사항)
+            document.getElementById('galleryInput').addEventListener('change', function (e) {
+                if (e.target.files && e.target.files[0]) {
+                    console.log('Image selected from gallery:', e.target.files[0].name);
+                }
+            });
+
+            document.getElementById('cameraInput').addEventListener('change', function (e) {
+                if (e.target.files && e.target.files[0]) {
+                    console.log('Photo taken:', e.target.files[0].name);
+                }
+            });
+        </script>
     </body>
 </html>

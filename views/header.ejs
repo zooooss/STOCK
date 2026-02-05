@@ -90,10 +90,12 @@
     <div class="nav-buttons">
         <a href="/chat" class="nav-btn <%= activeTab === 'chat' ? 'active' : '' %>"> TEAM CHAT </a>
 
-        <a href="/orderlist" class="nav-btn <%= activeTab === 'orderlist' ? 'active' : '' %>">
-            ORDERLIST
-            <span class="badge">12</span>
-        </a>
+<a href="/orderlist" class="nav-btn <%= activeTab === 'orderlist' ? 'active' : '' %>">
+    ORDERLIST
+    <% if (typeof orderCount !== 'undefined' && orderCount > 0) { %>
+        <span class="badge"><%= orderCount %></span>
+    <% } %>
+</a>
 
         <a href="#" class="nav-btn <%= activeTab === 'cart' ? 'active' : '' %>"> CART </a>
     </div>
